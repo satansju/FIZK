@@ -1,8 +1,8 @@
+package BooleanCircuit;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
@@ -10,21 +10,76 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
+
 import org.junit.Assert;
 
-
-public class Parser {
+public class Circuit {
     String path;
     Integer numberOfGates;
     Integer numberOfWires;
     Integer numberOfInputs;
     Integer numberOfOutputs;
     BigInteger output;
-
     HashMap<Integer, Boolean> wires = new HashMap<>();
+    int[][] gates;
+    int numberOfAndGates;
 
-    public Parser() {
+    public Circuit(String path) {
+        this.path = path;
     }
+
+
+    public void parseCircuit() {
+        File file = new File(path);
+        Scanner myReader;
+        try {
+            myReader = new Scanner(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        String line1 = myReader.nextLine();
+        String[] numbers = line1.split(" ", 2);
+        numberOfGates = Integer.parseInt(numbers[0]);
+
+        gates = new int[numberOfGates][3];
+        System.out.println(gates.length);
+        System.out.println(gates[0].length);
+
+        String line2 = myReader.nextLine();
+        String[] numbers2 = line2.split(" ", 3);
+        numberOfInputs = Integer.parseInt(numbers2[0]);
+        numberOfOutputs = Integer.parseInt(numbers2[2]);
+        numberOfAndGates = 0;
+
+        int i = 0;
+        while (myReader.hasNext()) {
+            String line = myReader.nextLine();
+            String[] splitLine = line.split(" ", 6);
+            System.out.println(Arrays.toString(splitLine));
+
+            int gateType = Gate.valueOf(splitLine[splitLine.length - 1]).ordinal();
+            if(gateType == Gate.AND.ordinal()) {
+                numberOfAndGates += 1;
+            }
+            String input1 = splitLine[3];
+            gates[i][0] = Integer.parseInt(input1);
+            gates[i][2] = gateType;
+
+            if (gateType != Gate.INV.ordinal()) {
+                String input2 = splitLine[4];
+                gates[i][1] = Integer.parseInt(input2);
+            }
+            i += 1;
+        }
+        System.out.println("Number of And Gates is: " + numberOfAndGates);
+    }
+
+    public int[][] getGates() {
+        return gates;
+    }
+
 
     public void parse(String path, Integer input) {
         this.path = path;
@@ -51,10 +106,11 @@ public class Parser {
         numberOfInputs = Integer.parseInt(numbers2[0]);
         numberOfOutputs = Integer.parseInt(numbers2[2]);
 
+
         System.out.println(numberOfGates + " " + numberOfWires + " " + numberOfInputs + " " + numberOfOutputs);
 
         initializeValues(input);
-
+// TODO: read in the circuit first and then evaluate
         while (myReader.hasNext()) {
             String line = myReader.nextLine();
             String[] splitLine = line.split(" ", 6);
@@ -78,17 +134,17 @@ public class Parser {
     }
 
     byte[] convertBooleanArrayToByteArray(boolean[] arr) {
-        if(arr.length < 8) {
+        if (arr.length < 8) {
             Integer number = 0;
-            for (int i = 0; i<arr.length; i++) {
-                if(arr[i]) {
-                    number += (int) Math.pow(2,i);
+            for (int i = 0; i < arr.length; i++) {
+                if (arr[i]) {
+                    number += (int) Math.pow(2, i);
                 }
             }
             return new byte[]{number.byteValue()};
         }
 
-        int n = arr.length/8;
+        int n = arr.length / 8;
         byte[] bytes = new byte[n];
         for (int i = 0; i < arr.length; i++) {
             if (arr[i]) {
@@ -103,7 +159,7 @@ public class Parser {
         // for each output wire in lowest layer, concat bits into final output bit string
         boolean[] arr = new boolean[numberOfOutputs];
         int firstIndex = numberOfWires - numberOfOutputs;
-        printHashMap(wires);
+        // printHashMap(wires);
 
         for (int i = 0; i < numberOfOutputs; i++) {
             int idx = firstIndex + i;
@@ -114,7 +170,7 @@ public class Parser {
         // convert boolean array to BigInteger
         byte bytes = Byte.parseByte(String.valueOf(arr));*/
 
-        byte[] bytes =  convertBooleanArrayToByteArray(arr);
+        byte[] bytes = convertBooleanArrayToByteArray(arr);
 
         output = new BigInteger(bytes);
         System.out.println(output);
@@ -127,7 +183,8 @@ public class Parser {
     private void initializeValues(Integer input) {
         // Parse input to bit/bool array
         for (int i = 0; i < numberOfInputs; i++) {
-            wires.put(i, (input & 1) == 1);
+            boolean bit = (input & 1) == 1;
+            wires.put(i, bit);
             input = input >> 1;
         }
 
@@ -144,6 +201,9 @@ public class Parser {
         }
     }
 
+
+    // TODO: something similar to evalGate that works for three parties
+    // take all inputs from all three views and do the calculations here
     private boolean evalGate(String op, Integer[] inputs) {  // TODO: skal det kun være party 1 der f.eks. laver XOR? jeg tror det ikke, men det er værd at overveje
         switch (op) {
             case "XOR":
@@ -165,24 +225,35 @@ public class Parser {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-        byte[] hfdvn = "0".getBytes(StandardCharsets.UTF_8);
-        BigInteger hashToBe = new BigInteger(digest.digest(hfdvn));
 
-        Parser parser = new Parser();
+        byte[] byte0 = BigInteger.ZERO.toByteArray();
+        System.out.println(Arrays.toString(byte0));
+
+        for (byte b : byte0) {
+            Assert.assertEquals(0, b);
+        }
+
+        //Assert.assertTrue(byte0 == );
+        BigInteger hashToBe = new BigInteger(digest.digest(byte0));
+
         Path currentRelativePath = Paths.get("");
         String s = currentRelativePath.toAbsolutePath().toString();
         System.out.println("Current absolute path is: " + s);
-        String input = s + File.separator + "BooleanCircuitParser" + File.separator + "src" + File.separator + "input" + File.separator + "sha256.txt";
+        String input = s + File.separator + "src" + File.separator + "BooleanCircuit" + File.separator + "input" + File.separator + "sha256.txt";
         System.out.println("Input: " + input);
-        parser.parse(input, 0);
 
-        System.out.println("hashToBe");
-        System.out.println(hashToBe);
-        System.out.println("hfdvn");
-        System.out.println(hfdvn.toString());
+        Circuit parser = new Circuit(input);
+
+        parser.parseCircuit();
+        // parser.parse(input, 0);
+
+        // System.out.println("hashToBe");
+        // System.out.println(hashToBe);
+        // System.out.println("0 byte");
+        // System.out.println(byte0.toString());
 
 
-        Assert.assertEquals(parser.getOutput(), hashToBe);
+        // Assert.assertEquals(parser.getOutput(), hashToBe);
 
     }
 }
