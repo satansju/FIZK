@@ -13,9 +13,13 @@ import java.util.Scanner;
 
 import org.junit.Assert;
 
+import Util.Converter.*;
+
+import static Util.Converter.convertBooleanArrayToByteArray;
+
 public class Circuit {
     String path;
-    Integer numberOfGates;
+    public Integer numberOfGates;
     Integer numberOfWires;
     Integer numberOfInputs;
     Integer numberOfOutputs;
@@ -80,6 +84,9 @@ public class Circuit {
         return gates;
     }
 
+    public int getNumberOfAndGates() {
+        return numberOfAndGates;
+    }
 
     public void parse(String path, Integer input) {
         this.path = path;
@@ -104,6 +111,7 @@ public class Circuit {
         String line2 = myReader.nextLine();
         String[] numbers2 = line2.split(" ", 3);
         numberOfInputs = Integer.parseInt(numbers2[0]);
+        numberOfOutputs = Integer.parseInt(numbers2[2]);
         numberOfOutputs = Integer.parseInt(numbers2[2]);
 
 
@@ -133,27 +141,7 @@ public class Circuit {
         readOutput();
     }
 
-    byte[] convertBooleanArrayToByteArray(boolean[] arr) {
-        if (arr.length < 8) {
-            Integer number = 0;
-            for (int i = 0; i < arr.length; i++) {
-                if (arr[i]) {
-                    number += (int) Math.pow(2, i);
-                }
-            }
-            return new byte[]{number.byteValue()};
-        }
 
-        int n = arr.length / 8;
-        byte[] bytes = new byte[n];
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i]) {
-                bytes[i / 8] |= (byte) (1 << (7 - (i % 8)));
-            }
-            /*bytes[i] = Byte.parseByte(Arrays.asList(Arrays.copyOfRange(arr, i * 8, (i + 1) * 8)).stream().map(e -> Integer.parseInt(String.valueOf(e))).toString());*/
-        }
-        return bytes;
-    }
 
     private void readOutput() {
         // for each output wire in lowest layer, concat bits into final output bit string
