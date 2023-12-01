@@ -1,14 +1,17 @@
 package ZKBoo;
 
+import BooleanCircuit.Circuit;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
-import java.util.Base64;
+import java.util.Arrays;
 
 public class Prover {
     View[] views;
@@ -16,10 +19,13 @@ public class Prover {
     int input;
     int numberOfInputs;
 
-    public Prover(int input, int[][] gates, int numberOfInputs) {
+    public Prover(int input, int[][] gates, int numberOfInputs, int numberOfAndGates) {
         this.input = input;
         this.gates = gates;
         this.numberOfInputs = numberOfInputs;
+        this.numberOfAndGates = numberOfAndGates;
+        this.randomness = new boolean[3][22573];
+        this.tapes = new byte[3][32];
     }
 
     private static final int KEY_LENGTH = 256;
