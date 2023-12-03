@@ -13,8 +13,6 @@ import java.util.Scanner;
 
 import org.junit.Assert;
 
-import Util.Converter.*;
-
 import static Util.Converter.convertBooleanArrayToByteArray;
 
 public class Circuit {
@@ -63,15 +61,15 @@ public class Circuit {
             String[] splitLine = line.split(" ", 6);
             System.out.println(Arrays.toString(splitLine));
 
-            int gateType = Gate.valueOf(splitLine[splitLine.length - 1]).ordinal();
-            if(gateType == Gate.AND.ordinal()) {
+            int gateType = GateType.valueOf(splitLine[splitLine.length - 1]).ordinal();
+            if(gateType == GateType.AND.ordinal()) {
                 numberOfAndGates += 1;
             }
             String input1 = splitLine[3];
             gates[i][0] = Integer.parseInt(input1);
             gates[i][2] = gateType;
 
-            if (gateType != Gate.INV.ordinal()) {
+            if (gateType != GateType.INV.ordinal()) {
                 String input2 = splitLine[4];
                 gates[i][1] = Integer.parseInt(input2);
             }
@@ -210,9 +208,7 @@ public class Circuit {
         MessageDigest digest = null;
         try {
             digest = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
+
 
         byte[] byte0 = BigInteger.ZERO.toByteArray();
         System.out.println(Arrays.toString(byte0));
@@ -242,6 +238,8 @@ public class Circuit {
 
 
         // Assert.assertEquals(parser.getOutput(), hashToBe);
-
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
     }
 }

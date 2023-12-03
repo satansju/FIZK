@@ -1,6 +1,8 @@
 package ZKBoo;
 
 import BooleanCircuit.Circuit;
+import BooleanCircuit.GateType;
+import BooleanCircuit.Gate;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -11,7 +13,10 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 import static Util.Converter.convertByteArrayToBooleanArray;
 
@@ -24,6 +29,8 @@ public class Prover {
     static byte[][] tapes;
     static boolean[][] randomness;
 
+    List<HashMap<Integer, Boolean>> wires;
+
 
     public Prover(int input, int[][] gates, int numberOfInputs, int numberOfAndGates) {
         this.input = input;
@@ -32,6 +39,7 @@ public class Prover {
         this.numberOfAndGates = numberOfAndGates;
         this.randomness = new boolean[3][22573];
         this.tapes = new byte[3][32];
+        this.wires = new ArrayList<>();
     }
 
     private static final int KEY_LENGTH = 256;
@@ -73,7 +81,10 @@ public class Prover {
 
                 if (i != 2) {
                     shares[i] = convertByteArrayToBooleanArray(encryptedData);
+
                 }
+
+
             } catch (Exception e) {
                 // Handle the exception properly
                 e.printStackTrace();
@@ -102,7 +113,6 @@ public class Prover {
         // Encrypt 0 using AES stream to get R_i
 
 
-
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < numberOfAndGates; j++) {
                 randomness[i][j] = getRandomBit(false, convertByteArrayToBooleanArray(tapes[i]));
@@ -113,9 +123,9 @@ public class Prover {
 
     // Function R_i dependent on c and k_i - should be uniformly random // TODO: is it??
     public static boolean getRandomBit(boolean c, boolean[] tape) {
-       boolean res = false;
+        boolean res = false;
         for (int i = 0; i < tape.length; i++) {
-            if(i == 0) {
+            if (i == 0) {
                 res = c ^ tape[i];
             } else {
                 res = res ^ (c ^ tape[i]);
@@ -129,32 +139,62 @@ public class Prover {
     }
 
     public void evaluateCircuit() {
-        View partyA = views[0];
-        View partyB = views[1];
-        View partyC = views[2];
+        // for each gate, evaluate it for all three parties
+
+
+        // input values are part of the view
+//        View partyA = views[0];
+//        View partyB = views[1];
+//        View partyC = views[2];
+
 
         for (int i = 0; i < gates.length + 1; i++) {
             int inputWire1 = gates[i][0];
             int inputWire2 = gates[i][1];
             int op = gates[i][2];
 
-            switch (op) {
-                case 0:
-                    System.out.println("TODO: XOR");
+            for (int party = 0; party < 3; party++) {
+                HashMap<Integer, Boolean> wire = wires.get(party);
+                boolean output = false;
 
-                case 1:
-                    System.out.println("TODO: AND");
+                boolean input1 = wire.get(inputWire1);
+                boolean input2 = wire.get(inputWire2);
 
-                case 2:
-                    System.out.println("TODO: INV");
+                switch (GateType.values()[op]) {
+                    case XOR:
+                        output = Gate.evalXOR(input1, input2);
+                        break;
+                    case AND:
+                        HashMap<Integer, Boolean> wireNextParty = wires.get(nextParty(party));
+                        boolean inputNextParty1 = wireNextParty.get(inputWire1);
+                        boolean inputNextParty2 = wireNextParty.get(inputWire2);
 
-                default:
-                    throw new Error("Gate " + op + " does not exist");
+                        output = Gate.evalAND(input1, input2, inputNextParty1, inputNextParty2, true, true); // FIXME - learn how to get the randomness
+                        break;
+                    case INV:
+                        output = Gate.evalINV(input1);
+                        break;
+                    default:
+                        throw new Error("Gate " + op + " does not exist");
+                }
+
+                // put the output value on the output wire of the gate
+                wire.put(i + numberOfInputs, output); // TODO: test that this is actually placed in the correct position
+
+                // put the output in the view if the gate was an AND gate
+                if (GateType.values()[op] == GateType.AND) {
+                    views[i].updateView(output);
+                }
+
             }
+
 
         }
 
-        // should update views for the AND gates
+    }
+
+    public static int nextParty(int i) {
+        return (i + 1) % 3;
     }
 
     public int getOutputs() {
@@ -184,14 +224,30 @@ public class Prover {
         boolean[][] shares = getShares(input);
 
         // 3)
-        views[0] = new View(1, 1, 512); // TODO: ikke size 1 og seed 1 eller outputsize 512
-        views[1] = new View(1, 1, 512);
-        views[2] = new View(1, 1, 512);
+        int viewSize = numberOfInputs + numberOfAndGates;
+        views[0] = new View(viewSize, 1, 256); // TODO:seed 1 eller outputsize 512
+        views[1] = new View(viewSize, 1, 256); // TODO: output str skal måske heller ikke hardcodes
+        views[2] = new View(viewSize, 1, 256);
+
+
+        // add shares to each party's view and the wires for computation:
+        addShareToViewsAndWires(shares);
 
         evaluateCircuit();
         int outputs = getOutputs();
         hashChallenge();
         sendProofToVerifier();
+    }
+
+    private void addShareToViewsAndWires(boolean[][] shares) {
+        for (int i = 0; i < 3; i++) {
+            // add all input bits for the share to the view
+            boolean[] share = shares[i];
+            views[i].addInputShare(share);
+            for (int j = 0; j < share.length; j++) {
+                wires.get(i).put(j, share[j]);
+            }
+        }
     }
 
     public static void main(String[] args) {
