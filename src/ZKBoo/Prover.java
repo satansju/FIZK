@@ -1,8 +1,8 @@
 package ZKBoo;
 
 import BooleanCircuit.Circuit;
-import BooleanCircuit.GateType;
 import BooleanCircuit.Gate;
+import BooleanCircuit.GateType;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -169,7 +169,7 @@ public class Prover {
                         boolean inputNextParty1 = wireNextParty.get(inputWire1);
                         boolean inputNextParty2 = wireNextParty.get(inputWire2);
 
-                        output = Gate.evalAND(input1, input2, inputNextParty1, inputNextParty2, true, true); // FIXME - learn how to get the randomness
+                        output = Gate.evalAND(input1, input2, inputNextParty1, inputNextParty2, true, true); // FIXME - learn how to get the randomness // TODO - det her skal gøres hvor man får info fra de andre
                         break;
                     case INV:
                         output = Gate.evalINV(input1);
