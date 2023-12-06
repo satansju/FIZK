@@ -9,6 +9,7 @@ import java.util.Collections;
 
 import static Util.Converter.convertBooleanArrayToByteArray;
 import static Util.Converter.convertByteArrayToBooleanArray;
+import static Util.Converter.intToBooleanArray;
 
 
 /**
@@ -16,6 +17,55 @@ import static Util.Converter.convertByteArrayToBooleanArray;
  * @project @{PROJECT}
  */
 public class Shares {
+
+    public static boolean[][] getShares(int x) {
+        try {
+            // Generate a random secret key for AES with 256-bit key size
+            SecretKey secretKey1 = generateSecretKey();
+            SecretKey secretKey2 = generateSecretKey();
+            SecretKey secretKey3 = generateSecretKey();
+
+            // Generate random tapes k1, k2, k3
+            boolean[] k1 = generateRandomBytes(secretKey1);
+            boolean[] k2 = generateRandomBytes(secretKey2);
+            boolean[] k3 = generateRandomBytes(secretKey3);
+
+            // Calculate additive shares x1, x2, x3
+            boolean[][] shares = calculateShares(x, k1, k2, k3);
+            boolean[] x1 = shares[0];
+            boolean[] x2 = shares[1];
+            boolean[] x3 = shares[2];
+            assert(x3.length == 512);
+
+            // Convert to BigInteger for printing
+            byte[] x1Bytes = convertBooleanArrayToByteArray(x1);
+            byte[] x2Bytes = convertBooleanArrayToByteArray(x2);
+            byte[] x3Bytes = convertBooleanArrayToByteArray(x3);
+
+
+            BigInteger x1Int = new BigInteger(x1Bytes);
+            BigInteger x2Int = new BigInteger(x2Bytes);
+            BigInteger x3Int = new BigInteger(x3Bytes);
+
+            boolean[] xCombined = new boolean[x1.length];
+
+            for (int i = 0; i < x1.length; i++) {
+                xCombined[i] = x1[i] ^ x2[i] ^ x3[i];
+            }
+
+            BigInteger xCombinedInt = new BigInteger(convertBooleanArrayToByteArray(xCombined));
+
+            // Verify that x1 xor x2 xor x3 = x and x3 = x xor x1 xor x2
+            System.out.println("x1: " + x1Int);
+            System.out.println("x2: " + x2Int);
+            System.out.println("x3: " + x3Int);
+            System.out.println("x1 xor x2 xor x3: " + xCombinedInt);
+            return shares;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     public static void main(String[] args) {
         try {
@@ -105,14 +155,5 @@ public class Shares {
             assert(inputBits[i] == shares[2][i] ^ shares[0][i] ^ shares[1][i]);
         }
         return shares;
-    }
-
-    // Convert int to byte array
-    private static boolean[] intToBooleanArray(int x, int arrayLength) {
-        boolean[] booleanArray = new boolean[arrayLength];
-        for (int i = arrayLength-1; i >= 0; i--) {
-            booleanArray[i] = (x & (1 << i)) != 0;
-        }
-        return booleanArray;
     }
 }

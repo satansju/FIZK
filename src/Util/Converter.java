@@ -33,9 +33,19 @@ public class Converter {
         for(int i = 0; i<arr.length; i++) {
             for (int j = 0; j < 8; j++) {
                 // Extract individual bits from each byte
-                booleans[i * 8 + j] = ((arr[i] >> (7 - j)) & 1) == 1;
+                booleans[i * 8 + j] = ((arr[i] >> (7-j)) & 1) == 1;
             }
         }
         return booleans;
+    }
+
+
+    // Convert int to boolean array
+    public static boolean[] intToBooleanArray(int x, int arrayLength) {
+        boolean[] booleanArray = new boolean[arrayLength];
+        for (int i = arrayLength-1; i >= 0; i--) {
+            booleanArray[i] = (x & (1 << i)) != 0;
+        }
+        return booleanArray;
     }
 }
