@@ -18,24 +18,35 @@ import static Util.Converter.intToBooleanArray;
  */
 public class Shares {
 
+    // Secret keys
+    static SecretKey[] secretKeys = new SecretKey[3];
+
+    public Shares() {
+        SecretKey secretKey1 = generateSecretKey();
+        SecretKey secretKey2 = generateSecretKey();
+        SecretKey secretKey3 = generateSecretKey();
+
+        secretKeys[0] = secretKey1;
+        secretKeys[1] = secretKey2;
+        secretKeys[2] = secretKey3;
+    }
+
+    public static SecretKey[] getSecretKeys() {
+        return secretKeys;
+    }
+
     public static boolean[][] getShares(int x) {
         try {
             // Generate a random secret key for AES with 256-bit key size
-            SecretKey secretKey1 = generateSecretKey();
-            SecretKey secretKey2 = generateSecretKey();
-            SecretKey secretKey3 = generateSecretKey();
+
 
             // Generate random tapes k1, k2, k3
-            boolean[] k1 = generateRandomBytes(secretKey1);
-            boolean[] k2 = generateRandomBytes(secretKey2);
-            boolean[] k3 = generateRandomBytes(secretKey3);
+            boolean[] k1 = generateRandomBytes(secretKeys[0]);
+            boolean[] k2 = generateRandomBytes(secretKeys[1]);
+            boolean[] k3 = generateRandomBytes(secretKeys[2]);
 
             // Calculate additive shares x1, x2, x3
             boolean[][] shares = calculateShares(x, k1, k2, k3);
-            boolean[] x1 = shares[0];
-            boolean[] x2 = shares[1];
-            boolean[] x3 = shares[2];
-
             return shares;
         } catch (Exception e) {
             e.printStackTrace();
@@ -43,62 +54,17 @@ public class Shares {
         }
     }
 
-    public static void main(String[] args) {
+    // Generate a random secret key for AES with 256-bit key size
+    private static SecretKey generateSecretKey() {
         try {
-            // Generate a random secret key for AES with 256-bit key size
-            SecretKey secretKey1 = generateSecretKey();
-            SecretKey secretKey2 = generateSecretKey();
-            SecretKey secretKey3 = generateSecretKey();
-
-            // Input value x
-            int x = 1; // Replace with your actual input
-
-            // Generate random tapes k1, k2, k3
-            boolean[] k1 = generateRandomBytes(secretKey1);
-            boolean[] k2 = generateRandomBytes(secretKey2);
-            boolean[] k3 = generateRandomBytes(secretKey3);
-
-            // Calculate additive shares x1, x2, x3
-            boolean[][] shares = calculateShares(x, k1, k2, k3);
-            boolean[] x1 = shares[0];
-            boolean[] x2 = shares[1];
-            boolean[] x3 = shares[2];
-            assert(x3.length == 512);
-
-            // Convert to BigInteger for printing
-            byte[] x1Bytes = convertBooleanArrayToByteArray(x1);
-            byte[] x2Bytes = convertBooleanArrayToByteArray(x2);
-            byte[] x3Bytes = convertBooleanArrayToByteArray(x3);
-
-
-            BigInteger x1Int = new BigInteger(x1Bytes);
-            BigInteger x2Int = new BigInteger(x2Bytes);
-            BigInteger x3Int = new BigInteger(x3Bytes);
-
-            boolean[] xCombined = new boolean[x1.length];
-
-            for (int i = 0; i < x1.length; i++) {
-                xCombined[i] = x1[i] ^ x2[i] ^ x3[i];
-            }
-
-            BigInteger xCombinedInt = new BigInteger(convertBooleanArrayToByteArray(xCombined));
-
-            // Verify that x1 xor x2 xor x3 = x and x3 = x xor x1 xor x2
-            System.out.println("x1: " + x1Int);
-            System.out.println("x2: " + x2Int);
-            System.out.println("x3: " + x3Int);
-            System.out.println("x1 xor x2 xor x3: " + xCombinedInt);
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+            SecureRandom secureRandom = new SecureRandom();
+            keyGenerator.init(256, secureRandom);
+            return keyGenerator.generateKey();
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-    }
-
-    // Generate a random secret key for AES with 256-bit key size
-    private static SecretKey generateSecretKey() throws Exception {
-        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-        SecureRandom secureRandom = new SecureRandom();
-        keyGenerator.init(256, secureRandom);
-        return keyGenerator.generateKey();
     }
 
     // Generate random booleans for the tapes

@@ -51,9 +51,8 @@ public class Converter {
         if(arrayLength > result.length){
             boolean[] temp = new boolean[arrayLength];
             Arrays.fill(temp, false);
-            System.arraycopy(result, 0, temp, arrayLength - result.length, result.length);
-            result = temp;
-            return result;
+            System.arraycopy(result, 0, temp, arrayLength - result.length, result.length);;
+            return temp;
         }
         return Arrays.copyOfRange(result, result.length - arrayLength, result.length);
     }
