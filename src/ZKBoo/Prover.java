@@ -10,6 +10,7 @@ import org.junit.Assert;
 import javax.crypto.SecretKey;
 import java.io.File;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
@@ -19,7 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import static Util.Converter.convertBooleanArrayToInteger;
+import static Util.Converter.*;
 
 public class Prover {
     View[] views;
@@ -171,7 +172,7 @@ public class Prover {
 
         evaluateCircuit();
         System.out.println("Views: " + Arrays.toString(views));
-        System.out.println("View lengths: " + views[0].views.size() + ", " + views[1].views.size() + ", " + views[2].views.size());
+        System.out.println("View lengths: " + views[0].views.length + ", " + views[1].views.length + ", " + views[2].views.length);
         this.outputShares = getOutputShares();
         this.output = recoverOutput(outputShares);
         System.out.println("OutputCombined: " + Arrays.toString(output));
@@ -188,7 +189,7 @@ public class Prover {
     }
 
 
-    public byte[] hashChallenge() {
+    public byte[] hash(byte[] commit) {
         // make a commitment to the views, outputs, seeds etc.
         // send it to the verifier
         // make a hashChallenge by hashing the commitment
@@ -197,16 +198,8 @@ public class Prover {
         try {
             messageDigest = MessageDigest.getInstance("SHA-256");
 
-
-            byte[] byte0 = BigInteger.ZERO.toByteArray();
-            System.out.println(Arrays.toString(byte0));
-
-            for (byte b : byte0) {
-                Assert.assertEquals(0, b);
-            }
-
             //Assert.assertTrue(byte0 == );
-            return messageDigest.digest(byte0);
+            return messageDigest.digest(commit);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
@@ -219,14 +212,93 @@ public class Prover {
             throw new Error("Output has not been computed yet");
         }
         // obtain challenge (NON-INTERACTIVE) and do mod 3 to know which views to prepare
-        byte[] challenge = hashChallenge();
         // prepare view e and e+1
 
         View[] viewsForProof = new View[]{views[0], views[1]};
         SecretKey[] seedsForProof = new SecretKey[]{secretKeys[2], secretKeys[3], secretKeys[4]};
+        byte[][] commits = new byte[3][];
+        byte[][] decommits = new byte[3][];
 
+        for (int j = 0; j < 3; j++) {
+            byte[] kj = seedsForProof[j].getEncoded();
+            byte[] xj = convertBooleanArrayToByteArray(shares[j]);
+            boolean[] vjBoolean = views[j].views;
+            byte[] vj = convertBooleanArrayToByteArray(vjBoolean);
+            byte[] combined = new byte[kj.length + xj.length + vj.length];
+            ByteBuffer commitBuffer = ByteBuffer.wrap(combined);
+            commitBuffer.put(kj);
+            commitBuffer.put(xj);
+            commitBuffer.put(vj);
+            byte[] cj = commitBuffer.array();
+            commits[j] = hash(cj);
 
-        return new Proof(challenge, viewsForProof, seedsForProof, numberOfInputs, numberOfOutputs, gates);
+            byte[] decommitCombined = new byte[kj.length + xj.length];
+            ByteBuffer decommitCombinedBuffer = ByteBuffer.wrap(decommitCombined);
+            decommitCombinedBuffer.put(kj);
+            decommitCombinedBuffer.put(xj);
+            byte[] decommitCombinedArray = decommitCombinedBuffer.array();
+            decommits[j] = decommitCombinedArray;
+        }
+
+        int outputSharesLength = outputShares[0].length + outputShares[1].length + outputShares[2].length;
+        int commitsLength = commits[0].length + commits[1].length + commits[2].length;
+        byte[] a = new byte[outputSharesLength + commitsLength];
+        ByteBuffer aBuffer = ByteBuffer.wrap(a);
+        aBuffer.put(convertBooleanArrayToByteArray(outputShares[0]));
+        aBuffer.put(convertBooleanArrayToByteArray(outputShares[1]));
+        aBuffer.put(convertBooleanArrayToByteArray(outputShares[2]));
+        aBuffer.put(commits[0]);
+        aBuffer.put(commits[1]);
+        aBuffer.put(commits[2]);
+        byte[] aArray = aBuffer.array();
+        byte[] challenge = hash(aArray);
+
+        int challengeParty = convertByteArrayToInteger(challenge) % 3;
+        int previousParty = (challengeParty + 2) % 3;
+
+        byte[] bi = new byte[outputShares[previousParty].length + commits[previousParty].length];
+        ByteBuffer biBuffer = ByteBuffer.wrap(bi);
+        biBuffer.put(convertBooleanArrayToByteArray(outputShares[previousParty]));
+        biBuffer.put(commits[previousParty]);
+        byte[] biArray = biBuffer.array();
+        byte[] zArray = generateZ(challengeParty, viewsForProof, seedsForProof, this.shares);
+
+        return new Proof(challenge, viewsForProof, seedsForProof, numberOfInputs, numberOfOutputs, gates, biArray, zArray);
+    }
+
+    byte[] generateZ(int challengeParty, View[] views, SecretKey[] secretKeys, boolean[][] shares) {
+        byte[] z;
+        ByteBuffer zBuffer;
+        byte[] zArray;
+        if(challengeParty == 0) {
+            z = new byte[views[1].views.length + secretKeys[0].getEncoded().length + secretKeys[1].getEncoded().length];
+            zBuffer = ByteBuffer.wrap(z);
+            zBuffer.put(convertBooleanArrayToByteArray(views[1].views));
+            zBuffer.put(secretKeys[0].getEncoded());
+            zBuffer.put(secretKeys[1].getEncoded());
+        } else if(challengeParty == 1) {
+            z = new byte[views[2].views.length + secretKeys[1].getEncoded().length + secretKeys[2].getEncoded().length + shares[2].length];
+            zBuffer = ByteBuffer.wrap(z);
+            zBuffer.put(convertBooleanArrayToByteArray(views[2].views));
+            zBuffer.put(secretKeys[1].getEncoded());
+            zBuffer.put(secretKeys[2].getEncoded());
+            zBuffer.put(convertBooleanArrayToByteArray(shares[2]));
+        } else if(challengeParty == 2) {
+            z = new byte[views[0].views.length + secretKeys[2].getEncoded().length + secretKeys[0].getEncoded().length + shares[2].length];
+            zBuffer = ByteBuffer.wrap(z);
+            zBuffer.put(convertBooleanArrayToByteArray(views[0].views));
+            zBuffer.put(secretKeys[2].getEncoded());
+            zBuffer.put(secretKeys[0].getEncoded());
+            zBuffer.put(convertBooleanArrayToByteArray(shares[0]));
+        } else {
+            throw new Error("Party " + challengeParty + " does not exist");
+        }
+        zArray = zBuffer.array();
+        return zArray;
+    }
+
+    private int convertByteArrayToInteger(byte[] challenge) {
+        return new BigInteger(challenge).intValue();
     }
 
     private void addShareToViewsAndWires(boolean[][] shares) {
@@ -241,17 +313,5 @@ public class Prover {
             }
             System.out.println(wires.get(i));
         }
-    }
-
-    public static void main(String[] args) {
-        Circuit circuit = new Circuit("src/BooleanCircuit/input/sha256.txt");
-        circuit.parseCircuit();
-        int[][] gates = circuit.getGates();
-        int input = 1;
-        System.out.println("No of AND gates: " + circuit.getNumberOfAndGates());
-        Prover prover = new Prover(input, gates, circuit.numberOfInputs, circuit.numberOfOutputs, circuit.getNumberOfAndGates());
-        prover.doMPCInTheHead();
-
-        Verifier verifier = new Verifier();
     }
 }

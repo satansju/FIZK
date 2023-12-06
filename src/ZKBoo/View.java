@@ -7,21 +7,23 @@ import java.util.List;
 
 class View {
 
-    List<Boolean> views;
+    boolean[] views;
     SecretKey seed;
     int size;
     int outputSize;
+    int currentGate = 0;
 
     public View(int size, SecretKey seed, int outputSize) {
         seed = seed;
         //views = new boolean[size];
-        views = new ArrayList<>();
+        views = new boolean[size];
         size = size;
         outputSize = outputSize;
     }
 
     public void updateView(boolean val) {
-        views.add(val);
+        views[currentGate] = val;
+        currentGate++;
     }
 
     // todo: test this

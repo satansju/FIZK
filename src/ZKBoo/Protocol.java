@@ -18,7 +18,6 @@ public class Protocol {
         Verifier verifier = new Verifier();
 
         prover.doMPCInTheHead();
-        prover.hashChallenge();
         verifier.receiveProof(prover.sendProofToVerifier());
 
         // verifier.receiveProof(prover.views, prover.getSeed, prover.size, prover.outputSize, gates);
