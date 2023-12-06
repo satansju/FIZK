@@ -1,4 +1,4 @@
-package Test;
+package Test.ZKBoo;
 
 import BooleanCircuit.Gate;
 import org.junit.Assert;

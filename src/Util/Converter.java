@@ -1,5 +1,8 @@
 package Util;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+
 /**
  * @author @{USER} on @{DATE}
  * @project @{PROJECT}
@@ -42,10 +45,16 @@ public class Converter {
 
     // Convert int to boolean array
     public static boolean[] intToBooleanArray(int x, int arrayLength) {
-        boolean[] booleanArray = new boolean[arrayLength];
-        for (int i = arrayLength-1; i >= 0; i--) {
-            booleanArray[i] = (x & (1 << i)) != 0;
+        BigInteger xAsBigInt = BigInteger.valueOf(x);
+        byte[] xAsBytes = xAsBigInt.toByteArray();
+        boolean[] result = convertByteArrayToBooleanArray(xAsBytes);
+        if(arrayLength > result.length){
+            boolean[] temp = new boolean[arrayLength];
+            Arrays.fill(temp, false);
+            System.arraycopy(result, 0, temp, arrayLength - result.length, result.length);
+            result = temp;
+            return result;
         }
-        return booleanArray;
+        return Arrays.copyOfRange(result, result.length - arrayLength, result.length);
     }
 }

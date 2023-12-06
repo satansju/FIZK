@@ -1,4 +1,4 @@
-package Test;
+package Test.BooleanCircuit;
 
 import org.junit.Test;
 import org.junit.Assert;

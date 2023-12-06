@@ -1,4 +1,4 @@
-package Test;
+package Test.Util;
 
 import org.junit.Test;
 import org.junit.Assert;
@@ -17,6 +17,7 @@ public class ConverterTest {
         Assert.assertTrue(Arrays.equals(intToBooleanArray(1, 2), new boolean[] {false, true}));
         Assert.assertTrue(Arrays.equals(intToBooleanArray(2, 5), new boolean[] {false, false, false, true, false}));
         Assert.assertTrue(Arrays.equals(intToBooleanArray(8, 5), new boolean[] {false, true, false, false, false}));
+        Assert.assertTrue(Arrays.equals(intToBooleanArray(2048, 12), new boolean[] {true, false, false, false, false, false, false, false, false, false, false, false}));
     }
 
     @Test

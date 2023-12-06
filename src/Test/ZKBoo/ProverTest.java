@@ -1,18 +1,20 @@
-package Test;
+package Test.ZKBoo;
 
 import BooleanCircuit.Circuit;
 import BooleanCircuit.Shares;
 import ZKBoo.Prover;
-import org.junit.Test;
 import org.junit.Assert;
+import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
+import static Util.Converter.convertBooleanArrayToByteArray;
 import static org.junit.Assert.assertEquals;
-import static Util.Converter.intToBooleanArray;
+import static org.junit.Assert.assertTrue;
 
 
-public class ZKBooTest
+public class ProverTest
 {
 
     @Test
@@ -30,10 +32,10 @@ public class ZKBooTest
 
     @Test
     public void testRandomnessGivesAdditiveSharesZero() {
-        Circuit circuit = new Circuit("src/BooleanCircuit/input/testXOR.txt");
+        /*Circuit circuit = new Circuit("src/BooleanCircuit/input/testXOR.txt");
         circuit.parseCircuit();
         int[][] gates = circuit.getGates();
-        Prover prover = new Prover(0, gates,3, 3);
+        Prover prover = new Prover(0, gates,3, 3);*/
         // boolean[][] shares = prover.getShares(0);
         Shares sharesClass = new Shares();
         boolean[][] shares = sharesClass.getShares(0);
@@ -57,31 +59,30 @@ public class ZKBooTest
 
     @Test
     public void testRandomnessGivesAdditiveSharesOne() {
-        Circuit circuit = new Circuit("src/BooleanCircuit/input/testXOR.txt");
+        /*Circuit circuit = new Circuit("src/BooleanCircuit/input/testXOR.txt");
         circuit.parseCircuit();
         int[][] gates = circuit.getGates();
-        Prover prover = new Prover(0, gates,3, 3);
+        Prover prover = new Prover(0, gates, 3, 3);*/
         // boolean[][] shares = prover.getShares(0);
-        Shares sharesClass = new Shares();
-        boolean[][] shares = sharesClass.getShares(1);
+//        Shares sharesClass = new Shares();
+        boolean[][] shares = Shares.getShares(1);
+        for (boolean[] share : shares) {
+            assertTrue(share.length == 512);
+        }
         boolean[] share1 = shares[0];
         boolean[] share2 = shares[1];
         boolean[] share3 = shares[2];
-        boolean[] sum = new boolean[share1.length];
+        boolean[] combinedShares = new boolean[share1.length];
 
         for (int i = 0; i < share1.length; i++) {
-            sum[i] = share1[i] ^ share2[i] ^ share3[i];
+            combinedShares[i] = share1[i] ^ share2[i] ^ share3[i];
         }
-        // Transform boolean sum array to integer
-        int sumInt = 0;
-        for (int i = 0; i < sum.length; i++) {
-            if (sum[i]) {
-                sumInt += Math.pow(2, i);
-            }
-        }
-        assertEquals(1, sumInt);
+        System.out.println("combined shares:" + Arrays.toString(combinedShares));
+        byte[] test = {1};
+        BigInteger testHejsa = new BigInteger(test);
+        System.out.println("testHejsa: " + testHejsa);
+        BigInteger combinedSharesBigInteger = new BigInteger(convertBooleanArrayToByteArray(combinedShares));
+        System.out.println("Combined results" + combinedSharesBigInteger.toString());
+        Assert.assertTrue(BigInteger.ONE.equals(combinedSharesBigInteger));
     }
-
-
-
 }
