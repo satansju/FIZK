@@ -9,6 +9,7 @@ import java.util.Arrays;
 
 import static Util.Converter.convertBooleanArrayToByteArray;
 import static Util.Converter.intToBooleanArray;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author @{USER} on @{DATE}
@@ -54,6 +55,57 @@ public class SharesTest {
         System.out.println("x3: " + x3Int);
         System.out.println("x1 xor x2 xor x3: " + xCombinedInt);
 
-        Assert.assertTrue(Arrays.equals(xCombined, inputBits));
+        assertTrue(Arrays.equals(xCombined, inputBits));
+    }
+
+    @Test
+    public void generateRandomBits() throws Exception {
+        Shares sharesObj = new Shares();
+        int length = 512;
+        boolean[] randomBits = sharesObj.generateRandomBits(length, sharesObj.getSecretKeys()[0]);
+        Assert.assertEquals(length, randomBits.length);
+        System.out.println(randomBits.length);
+        System.out.println(Arrays.toString(randomBits));
+    }
+
+    @Test
+    public void generateBitStreamsTests() {
+        Shares sharesObj = new Shares();
+        int length = 512;
+        boolean[][] randomBits = sharesObj.generateBitStreams(length);
+        Assert.assertEquals(length, randomBits[0].length);
+        Assert.assertEquals(length, randomBits[1].length);
+        Assert.assertEquals(length, randomBits[2].length);
+    }
+
+    @Test
+    public void testThatSeededBitStreamsAreEqual() {
+        Shares sharesObj = new Shares();
+        int length = 512;
+        boolean[][] randomBits = sharesObj.generateBitStreams(length);
+        Assert.assertEquals(length, randomBits[0].length);
+        Assert.assertEquals(length, randomBits[1].length);
+        Assert.assertEquals(length, randomBits[2].length);
+
+        boolean[][] randomBits2 = sharesObj.generateBitStreams(length);
+        Assert.assertTrue(Arrays.equals(randomBits[0], randomBits2[0]));
+        Assert.assertTrue(Arrays.equals(randomBits[1], randomBits2[1]));
+        Assert.assertTrue(Arrays.equals(randomBits[2], randomBits2[2]));
+    }
+
+    @Test
+    public void testThatDifferentlySeededBitStreamsAreDifferent() {
+        Shares sharesObj1 = new Shares();
+        int length = 512;
+        boolean[][] randomBits = sharesObj1.generateBitStreams(length);
+        Assert.assertEquals(length, randomBits[0].length);
+        Assert.assertEquals(length, randomBits[1].length);
+        Assert.assertEquals(length, randomBits[2].length);
+
+        Shares sharesObj2 = new Shares();
+        boolean[][] randomBits2 = sharesObj2.generateBitStreams(length);
+        Assert.assertFalse(Arrays.equals(randomBits[0], randomBits2[0]));
+        Assert.assertFalse(Arrays.equals(randomBits[1], randomBits2[1]));
+        Assert.assertFalse(Arrays.equals(randomBits[2], randomBits2[2]));
     }
 }

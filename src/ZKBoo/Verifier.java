@@ -1,23 +1,24 @@
 package ZKBoo;
 
+import javax.crypto.SecretKey;
 import java.util.HashMap;
 
 // Verify the output of the prover is correct and reject otherwise
 public class Verifier {
     View[] views;
-    int seed;
-    int size;
+    SecretKey[] seeds;
+    int inputSize;
     int outputSize;
-    int[][] circuit;
+    int[][] gates;
 
-    public void receiveProof(View[] views, int seed, int size, int outputSize, int[][] circuit) {
-        this.views = views;
-        this.seed = seed;
-        this.size = size;
-        this.outputSize = outputSize;
-        this.circuit = circuit;
+    public void receiveProof(Proof proof) {
+        this.views = proof.views;
+        this.seeds = proof.seedsForInputs;
+        this.inputSize = proof.inputSize;
+        this.outputSize = proof.outputSize;
+        this.gates = proof.gates;
 
-        if(verify()) {
+        if(verify()) { // TODO: implement verify()
             System.out.println("Proof is correct");
         } else {
             System.out.println("Proof is incorrect");
@@ -26,31 +27,9 @@ public class Verifier {
 
     public boolean verify() {
         HashMap<Integer, Boolean> wires = new HashMap<>();
-        for(int i = 0; i < 2; i++) {
-            for (int j = 0; j< circuit.length; j++) {
-                int[] gate = circuit[j];
-                int numberOfInputWires = gate[0];
-                int outputWireIndex = gate.length - 2;
-                int outputWire = gate[outputWireIndex];
-                String op = String.valueOf(gate[gate.length - 1]);
-                int[] inputWires = new int[numberOfInputWires];
-
-                for (int k = 0; k < numberOfInputWires; k++) {
-                    inputWires[k] = gate[k + 2];
-                }
-
-                boolean result = evalGate(op, inputWires);
-                /*System.out.println(result);*/
-                wires.put(outputWire, result);
-                if(! wires.get(i).equals(views[i].output()[i])) {
-                    return false;
-                }
-            }
+        for (int i = 0; i < inputSize; i++) {
+            wires.put(i, true);
         }
-        return true;
-    }
-
-    private boolean evalGate(String op, int[] inputWires) {
-        return false;
+        return true; // FIXME: implement
     }
 }

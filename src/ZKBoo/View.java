@@ -1,5 +1,6 @@
 package ZKBoo;
 
+import javax.crypto.SecretKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -7,11 +8,11 @@ import java.util.List;
 class View {
 
     List<Boolean> views;
-    int seed;
+    SecretKey seed;
     int size;
     int outputSize;
 
-    public View(int size, int seed, int outputSize) {
+    public View(int size, SecretKey seed, int outputSize) {
         seed = seed;
         //views = new boolean[size];
         views = new ArrayList<>();
@@ -28,18 +29,5 @@ class View {
         for (boolean b : share) {
             updateView(b);
         }
-    }
-
-    // TODO: skal vi have output med i viewet?
-    public boolean[] output() {
-//        return Arrays.copyOfRange(views, size - outputSize, size);
-        boolean[] output = new boolean[outputSize];
-
-        // convert list to bool array containing the output shares
-        for (int i = 0; i < outputSize; i++) {
-            output[i] = views.get(i + (size - outputSize));
-        }
-
-        return output;
     }
 }

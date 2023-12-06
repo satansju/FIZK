@@ -19,8 +19,8 @@ public class Circuit {
     String path;
     public Integer numberOfGates;
     Integer numberOfWires;
-    Integer numberOfInputs;
-    Integer numberOfOutputs;
+    public Integer numberOfInputs;
+    public Integer numberOfOutputs;
     BigInteger output;
     HashMap<Integer, Boolean> wires = new HashMap<>();
     int[][] gates;
@@ -45,12 +45,13 @@ public class Circuit {
         String[] numbers = line1.split(" ", 2);
         numberOfGates = Integer.parseInt(numbers[0]);
 
-        gates = new int[numberOfGates][3];
+        gates = new int[numberOfGates][4];
         System.out.println(gates.length);
         System.out.println(gates[0].length);
 
         String line2 = myReader.nextLine();
         String[] numbers2 = line2.split(" ", 3);
+        System.out.println("Numbers: " + Arrays.toString(numbers2));
         numberOfInputs = Integer.parseInt(numbers2[0]);
         numberOfOutputs = Integer.parseInt(numbers2[2]);
         numberOfAndGates = 0;
@@ -65,12 +66,13 @@ public class Circuit {
             if(gateType == GateType.AND.ordinal()) {
                 numberOfAndGates += 1;
             }
-            String input1 = splitLine[3];
+            String input1 = splitLine[2];
             gates[i][0] = Integer.parseInt(input1);
             gates[i][2] = gateType;
+            gates[i][3] = Integer.parseInt(splitLine[splitLine.length - 2]); // output wire
 
             if (gateType != GateType.INV.ordinal()) {
-                String input2 = splitLine[4];
+                String input2 = splitLine[3];
                 gates[i][1] = Integer.parseInt(input2);
             }
             i += 1;
@@ -109,7 +111,6 @@ public class Circuit {
         String line2 = myReader.nextLine();
         String[] numbers2 = line2.split(" ", 3);
         numberOfInputs = Integer.parseInt(numbers2[0]);
-        numberOfOutputs = Integer.parseInt(numbers2[2]);
         numberOfOutputs = Integer.parseInt(numbers2[2]);
 
 

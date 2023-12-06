@@ -18,8 +18,11 @@ public class ProverTest
 {
 
     @Test
-    public void testGetRandomBit() {
-
+    public void testGetOutputShares() {
+        int noOfOutputs = 10;
+        boolean[] wires = new boolean[] {true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false};
+//        boolean[] result =
+//        Assert.assertEquals()
     }
 
     @Test
@@ -32,11 +35,6 @@ public class ProverTest
 
     @Test
     public void testRandomnessGivesAdditiveSharesZero() {
-        /*Circuit circuit = new Circuit("src/BooleanCircuit/input/testXOR.txt");
-        circuit.parseCircuit();
-        int[][] gates = circuit.getGates();
-        Prover prover = new Prover(0, gates,3, 3);*/
-        // boolean[][] shares = prover.getShares(0);
         Shares sharesClass = new Shares();
         boolean[][] shares = sharesClass.getShares(0);
         boolean[] share1 = shares[0];
@@ -72,12 +70,7 @@ public class ProverTest
         for (int i = 0; i < share1.length; i++) {
             combinedShares[i] = share1[i] ^ share2[i] ^ share3[i];
         }
-        System.out.println("combined shares:" + Arrays.toString(combinedShares));
-        byte[] test = {1};
-        BigInteger testHejsa = new BigInteger(test);
-        System.out.println("testHejsa: " + testHejsa);
         BigInteger combinedSharesBigInteger = new BigInteger(convertBooleanArrayToByteArray(combinedShares));
-        System.out.println("Combined results" + combinedSharesBigInteger.toString());
         Assert.assertTrue(BigInteger.ONE.equals(combinedSharesBigInteger));
     }
 
@@ -96,12 +89,7 @@ public class ProverTest
         for (int i = 0; i < share1.length; i++) {
             combinedShares[i] = share1[i] ^ share2[i] ^ share3[i];
         }
-        System.out.println("combined shares:" + Arrays.toString(combinedShares));
-        byte[] test = {1};
-        BigInteger testHejsa = new BigInteger(test);
-        System.out.println("testHejsa: " + testHejsa);
         BigInteger combinedSharesBigInteger = new BigInteger(convertBooleanArrayToByteArray(combinedShares));
-        System.out.println("Combined results: " + combinedSharesBigInteger);
         Assert.assertTrue(BigInteger.valueOf(666L).equals(combinedSharesBigInteger));
     }
 }

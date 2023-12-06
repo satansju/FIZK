@@ -55,4 +55,9 @@ public class ConverterTest {
         byte[] bytes = {5, 1};
         Assert.assertTrue(Arrays.equals(bytes, convertBooleanArrayToByteArray(bool)));
     }
+
+    @Test
+    public void convertBooleanArrayToInteger() {
+
+    }
 }

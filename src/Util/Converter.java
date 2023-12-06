@@ -56,4 +56,14 @@ public class Converter {
         }
         return Arrays.copyOfRange(result, result.length - arrayLength, result.length);
     }
+
+    public static int convertBooleanArrayToInteger(boolean[] bools) {
+        int result = 0;
+        for (int i = 0; i < bools.length; i++) {
+            if (bools[i]) {
+                result += (int) Math.pow(2, i);
+            }
+        }
+        return result;
+    }
 }

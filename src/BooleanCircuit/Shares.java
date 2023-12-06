@@ -19,16 +19,65 @@ import static Util.Converter.intToBooleanArray;
 public class Shares {
 
     // Secret keys
-    static SecretKey[] secretKeys = new SecretKey[3];
+    static SecretKey[] secretKeys;
 
     public Shares() {
-        SecretKey secretKey1 = generateSecretKey();
-        SecretKey secretKey2 = generateSecretKey();
-        SecretKey secretKey3 = generateSecretKey();
+        SecretKey secretKeyForShares1 = generateSecretKey();
+        SecretKey secretKeyForShares2 = generateSecretKey();
 
-        secretKeys[0] = secretKey1;
-        secretKeys[1] = secretKey2;
-        secretKeys[2] = secretKey3;
+        SecretKey secretKeyForAnd1 = generateSecretKey();
+        SecretKey secretKeyForAnd2 = generateSecretKey();
+        SecretKey secretKeyForAnd3 = generateSecretKey();
+
+        this.secretKeys = new SecretKey[] {secretKeyForShares1, secretKeyForShares2, secretKeyForAnd1, secretKeyForAnd2, secretKeyForAnd3};
+    }
+
+    public Shares(SecretKey[] secretKeys) {
+        if (secretKeys.length == 3) {
+            this.secretKeys = new SecretKey[]{generateSecretKey(), generateSecretKey(), secretKeys[0], secretKeys[1], secretKeys[2]};
+        }
+    }
+
+    // Generate a bit stream of random bits using AES encryption in counter mode of length int length
+    public static boolean[] generateRandomBits(int length, SecretKey secretKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+
+        byte[] bytes = new byte[length/8];
+        byte[] counter = new byte[16];
+        byte[] encryptedBytes = new byte[16];
+
+        for (int i = 0; i < length/8; i += 16) {
+            encryptedBytes = cipher.doFinal(counter);
+            System.arraycopy(encryptedBytes, 0, bytes, i, Math.min(16, length - i));
+            incrementCounter(counter);
+        }
+
+        boolean[] convertedBytes = convertByteArrayToBooleanArray(bytes);
+        return convertedBytes;
+    }
+    
+    public static boolean[][] generateBitStreams(int numberOfAndGates) {
+        boolean[][] generatedBitStreams = new boolean[3][numberOfAndGates];
+        try {
+            generatedBitStreams[0] = generateRandomBits(numberOfAndGates, secretKeys[2]);
+            generatedBitStreams[1] = generateRandomBits(numberOfAndGates, secretKeys[3]);
+            generatedBitStreams[2] = generateRandomBits(numberOfAndGates, secretKeys[4]);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return generatedBitStreams;
+    }
+
+    private static void incrementCounter(byte[] counter) {
+        for (int i = counter.length - 1; i >= 0; i--) {
+            if (counter[i] == Byte.MAX_VALUE) {
+                counter[i] = Byte.MIN_VALUE;
+            } else {
+                counter[i]++;
+                break;
+            }
+        }
     }
 
     public static SecretKey[] getSecretKeys() {
@@ -43,10 +92,9 @@ public class Shares {
             // Generate random tapes k1, k2, k3
             boolean[] k1 = generateRandomBytes(secretKeys[0]);
             boolean[] k2 = generateRandomBytes(secretKeys[1]);
-            boolean[] k3 = generateRandomBytes(secretKeys[2]);
 
             // Calculate additive shares x1, x2, x3
-            boolean[][] shares = calculateShares(x, k1, k2, k3);
+            boolean[][] shares = calculateShares(x, k1, k2);
             return shares;
         } catch (Exception e) {
             e.printStackTrace();
@@ -84,7 +132,7 @@ public class Shares {
     }
 
     // Calculate additive share using AES encryption
-    private static boolean[][] calculateShares(int x, boolean[] k1, boolean[] k2, boolean[] k3) throws Exception {
+    private static boolean[][] calculateShares(int x, boolean[] k1, boolean[] k2) throws Exception {
         int numberOfInputs = 512;
         boolean[][] shares = new boolean[3][numberOfInputs];
         boolean[] inputBits = intToBooleanArray(x, numberOfInputs);
