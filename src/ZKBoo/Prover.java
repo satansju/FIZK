@@ -212,7 +212,7 @@ public class Prover {
             throw new Error("Output has not been computed yet");
         }
         // obtain challenge (NON-INTERACTIVE) and do mod 3 to know which views to prepare
-        // prepare view e and e+1
+        // Prepare view e and e+1
 
         View[] viewsForProof = new View[]{views[0], views[1]};
         SecretKey[] seedsForProof = new SecretKey[]{secretKeys[2], secretKeys[3], secretKeys[4]};
@@ -254,7 +254,7 @@ public class Prover {
         byte[] challenge = hash(aArray);
 
         int challengeParty = convertByteArrayToInteger(challenge) % 3;
-        int previousParty = (challengeParty + 2) % 3;
+        int previousParty = Math.abs(challengeParty + 2) % 3;
 
         byte[] bi = new byte[outputShares[previousParty].length + commits[previousParty].length];
         ByteBuffer biBuffer = ByteBuffer.wrap(bi);
@@ -263,7 +263,18 @@ public class Prover {
         byte[] biArray = biBuffer.array();
         byte[] zArray = generateZ(challengeParty, viewsForProof, seedsForProof, this.shares);
 
-        return new Proof(challenge, viewsForProof, seedsForProof, numberOfInputs, numberOfOutputs, gates, biArray, zArray);
+        return new Proof(
+            input,
+            challengeParty,
+            challenge,
+            viewsForProof,
+            seedsForProof,
+            numberOfInputs,
+            numberOfOutputs,
+            gates,
+            biArray,
+            zArray
+        );
     }
 
     byte[] generateZ(int challengeParty, View[] views, SecretKey[] secretKeys, boolean[][] shares) {
