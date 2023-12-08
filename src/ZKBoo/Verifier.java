@@ -5,6 +5,7 @@ import BooleanCircuit.Shares;
 import javax.crypto.SecretKey;
 import java.util.HashMap;
 
+import static Util.Util.*;
 import static Util.Converter.convertBooleanArrayToByteArray;
 import static ZKBoo.Prover.randomness;
 
@@ -23,7 +24,8 @@ public class Verifier {
     private byte[] bArray;
     private byte[] zArray;
 
-    public Verifier() {
+    public Verifier(int[][] gates) {
+        this.gates = gates;
 
     }
 
@@ -40,12 +42,12 @@ public class Verifier {
         this.bArray = proof.bArray;
 
         sharesObj = new Shares(seeds);
-        this.shares = sharesObj.getShares(input);
+        this.shares = sharesObj.getSharesForVerifier();
 
-        byte[] xParty = retrieveXparty(party);
-        byte[] xNextParty = retrieveXNextPary(party + 1 % 3);
-        byte[] viewNextParty = convertBooleanArrayToByteArray(views[party + 1 % 3].views);
-        byte[] viewParty = calculateView(xParty, xNextParty, randomness[party], randomness[party + 1 % 3]);
+        byte[] xParty = retrieveXParty(party);
+        byte[] xNextParty = retrieveXNextParty(nextParty(party));
+        byte[] viewNextParty = convertBooleanArrayToByteArray(views[nextParty(party)].views);
+        byte[] viewParty = calculateView(xParty, xNextParty, randomness[party], randomness[nextParty(party)]);
 
         if(verify()) { // TODO: implement verify()
             System.out.println("Proof is correct");
@@ -59,7 +61,7 @@ public class Verifier {
         return view;
     }
 
-    private byte[] retrieveXNextPary(int i) {
+    private byte[] retrieveXNextParty(int i) {
         if(i == 0) {
             return convertBooleanArrayToByteArray(sharesObj.getShares(input)[0]);
         } else if(i == 1) {
@@ -70,7 +72,7 @@ public class Verifier {
         }
     }
 
-    private byte[] retrieveXparty(int party) {
+    private byte[] retrieveXParty(int party) {
         if(party == 0) {
             return convertBooleanArrayToByteArray(sharesObj.getShares(input)[1]);
         } else if(party == 1) {

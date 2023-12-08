@@ -26,14 +26,6 @@ public class ProverTest
     }
 
     @Test
-    public void testNextPartyDoesModCorrectly() {
-        assertEquals(1, Prover.nextParty(0));
-        assertEquals(2, Prover.nextParty(1));
-        assertEquals(0, Prover.nextParty(2));
-        assertEquals(1, Prover.nextParty(3));
-    }
-
-    @Test
     public void testRandomnessGivesAdditiveSharesZero() {
         Shares sharesClass = new Shares();
         boolean[][] shares = sharesClass.getShares(0);

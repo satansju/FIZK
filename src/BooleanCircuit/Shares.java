@@ -146,4 +146,8 @@ public class Shares {
         }
         return shares;
     }
+
+    public boolean[][] getSharesForVerifier() {
+        return null;
+    }
 }

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import static Util.Util.*;
 
 import static Util.Converter.*;
 
@@ -120,10 +121,6 @@ public class Prover {
 
     }
 
-    public static int nextParty(int i) {
-        return (i + 1) % 3;
-    }
-
     public boolean[][] getOutputShares() {
         boolean[][] outputShares = new boolean[3][numberOfOutputs];
         System.out.println(numberOfOutputs);
@@ -188,7 +185,6 @@ public class Prover {
         return output;
     }
 
-
     public byte[] hash(byte[] commit) {
         // make a commitment to the views, outputs, seeds etc.
         // send it to the verifier
@@ -202,9 +198,8 @@ public class Prover {
             return messageDigest.digest(commit);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+            throw new Error(e);
         }
-
-        return null; // TODO
     }
 
     public Proof sendProofToVerifier() {
@@ -277,29 +272,32 @@ public class Prover {
         );
     }
 
-    byte[] generateZ(int challengeParty, View[] views, SecretKey[] secretKeys, boolean[][] shares) {
+    byte[] generateZ(int challengeParty, View[] views, SecretKey[] secretKeysForAndGates, boolean[][] shares) {
         byte[] z;
         ByteBuffer zBuffer;
         byte[] zArray;
         if(challengeParty == 0) {
-            z = new byte[views[1].views.length + secretKeys[0].getEncoded().length + secretKeys[1].getEncoded().length];
-            zBuffer = ByteBuffer.wrap(z);
-            zBuffer.put(convertBooleanArrayToByteArray(views[1].views));
-            zBuffer.put(secretKeys[0].getEncoded());
-            zBuffer.put(secretKeys[1].getEncoded());
-        } else if(challengeParty == 1) {
-            z = new byte[views[2].views.length + secretKeys[1].getEncoded().length + secretKeys[2].getEncoded().length + shares[2].length];
-            zBuffer = ByteBuffer.wrap(z);
-            zBuffer.put(convertBooleanArrayToByteArray(views[2].views));
-            zBuffer.put(secretKeys[1].getEncoded());
-            zBuffer.put(secretKeys[2].getEncoded());
-            zBuffer.put(convertBooleanArrayToByteArray(shares[2]));
-        } else if(challengeParty == 2) {
-            z = new byte[views[0].views.length + secretKeys[2].getEncoded().length + secretKeys[0].getEncoded().length + shares[2].length];
+            z = new byte[views[0].views.length + views[1].views.length + secretKeysForAndGates[0].getEncoded().length + secretKeysForAndGates[1].getEncoded().length];
             zBuffer = ByteBuffer.wrap(z);
             zBuffer.put(convertBooleanArrayToByteArray(views[0].views));
-            zBuffer.put(secretKeys[2].getEncoded());
-            zBuffer.put(secretKeys[0].getEncoded());
+            zBuffer.put(convertBooleanArrayToByteArray(views[1].views));
+            zBuffer.put(secretKeysForAndGates[0].getEncoded());
+            zBuffer.put(secretKeysForAndGates[1].getEncoded());
+        } else if(challengeParty == 1) {
+            z = new byte[views[1].views.length + views[2].views.length + secretKeysForAndGates[1].getEncoded().length + secretKeysForAndGates[2].getEncoded().length + shares[2].length];
+            zBuffer = ByteBuffer.wrap(z);
+            zBuffer.put(convertBooleanArrayToByteArray(views[1].views));
+            zBuffer.put(convertBooleanArrayToByteArray(views[2].views));
+            zBuffer.put(secretKeysForAndGates[1].getEncoded());
+            zBuffer.put(secretKeysForAndGates[2].getEncoded());
+            zBuffer.put(convertBooleanArrayToByteArray(shares[2]));
+        } else if(challengeParty == 2) {
+            z = new byte[views[2].views.length + views[0].views.length + secretKeysForAndGates[2].getEncoded().length + secretKeysForAndGates[0].getEncoded().length + shares[2].length];
+            zBuffer = ByteBuffer.wrap(z);
+            zBuffer.put(convertBooleanArrayToByteArray(views[2].views));
+            zBuffer.put(convertBooleanArrayToByteArray(views[0].views));
+            zBuffer.put(secretKeysForAndGates[2].getEncoded());
+            zBuffer.put(secretKeysForAndGates[0].getEncoded());
             zBuffer.put(convertBooleanArrayToByteArray(shares[0]));
         } else {
             throw new Error("Party " + challengeParty + " does not exist");
