@@ -25,8 +25,8 @@ public class Verifier {
     private boolean[][] shares;
     private int party;
     private boolean[][] outputShares;
-    private byte[][] commitsArrays;
-    private byte[] hashChallenge;
+    private byte[][] commitsArrays;  // FIXME: recompute the commitment and compare to this array
+    private byte[] hashChallenge; // FIXME: recompute the hashchallenge and compare to this array
     private byte[] output;
 
     HashMap<Integer, Boolean> wiresParty = new HashMap<>();
