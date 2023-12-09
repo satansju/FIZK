@@ -15,7 +15,7 @@ public class Protocol {
         int input = 1;
         System.out.println("No of AND gates: " + circuit.getNumberOfAndGates());
         Prover prover = new Prover(input, gates, circuit.numberOfInputs, circuit.numberOfOutputs, circuit.getNumberOfAndGates());
-        Verifier verifier = new Verifier();
+        Verifier verifier = new Verifier(gates);
 
         prover.doMPCInTheHead();
         verifier.receiveProof(prover.sendProofToVerifier());

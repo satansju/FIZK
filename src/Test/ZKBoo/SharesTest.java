@@ -108,4 +108,27 @@ public class SharesTest {
         Assert.assertFalse(Arrays.equals(randomBits[1], randomBits2[1]));
         Assert.assertFalse(Arrays.equals(randomBits[2], randomBits2[2]));
     }
+
+    @Test
+    public void testGenerateBitStreamsWithLengthAndSecretKey() {
+        Shares sharesObj = new Shares();
+        int length = 512;
+        boolean[] randomBits = sharesObj.generateRandomBits(length, sharesObj.getSecretKeys()[0]);
+        Assert.assertEquals(length, randomBits.length);
+        System.out.println(randomBits.length);
+        System.out.println(Arrays.toString(randomBits));
+    }
+
+    @Test
+    public void testGenerateTwoBitStreamsWithSameSecretKey() {
+        Shares sharesObj = new Shares();
+        int length = 512;
+        boolean[] randomBits1 = sharesObj.generateRandomBits(length, sharesObj.getSecretKeys()[0]);
+        boolean[] randomBits2 = sharesObj.generateRandomBits(length, sharesObj.getSecretKeys()[0]);
+        Assert.assertTrue(Arrays.equals(randomBits1, randomBits2));
+        System.out.println(randomBits1.length);
+        System.out.println(randomBits2.length);
+        System.out.println(Arrays.toString(randomBits1));
+        System.out.println(Arrays.toString(randomBits2));
+    }
 }

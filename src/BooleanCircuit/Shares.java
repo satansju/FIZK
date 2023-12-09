@@ -39,22 +39,27 @@ public class Shares {
     }
 
     // Generate a bit stream of random bits using AES encryption in counter mode of length int length
-    public static boolean[] generateRandomBits(int length, SecretKey secretKey) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+    public static boolean[] generateRandomBits(int length, SecretKey secretKey) {
+        try {
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
 
-        byte[] bytes = new byte[length/8];
-        byte[] counter = new byte[16];
-        byte[] encryptedBytes = new byte[16];
+            byte[] bytes = new byte[length / 8];
+            byte[] counter = new byte[16];
+            byte[] encryptedBytes = new byte[16];
 
-        for (int i = 0; i < length/8; i += 16) {
-            encryptedBytes = cipher.doFinal(counter);
-            System.arraycopy(encryptedBytes, 0, bytes, i, Math.min(16, length - i));
-            incrementCounter(counter);
+            for (int i = 0; i < length / 8; i += 16) {
+                encryptedBytes = cipher.doFinal(counter);
+                System.arraycopy(encryptedBytes, 0, bytes, i, Math.min(16, length - i));
+                incrementCounter(counter);
+            }
+
+            boolean[] convertedBytes = convertByteArrayToBooleanArray(bytes);
+            return convertedBytes;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-
-        boolean[] convertedBytes = convertByteArrayToBooleanArray(bytes);
-        return convertedBytes;
     }
     
     public static boolean[][] generateBitStreams(int numberOfAndGates) {

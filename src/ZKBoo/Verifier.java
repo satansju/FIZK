@@ -1,28 +1,38 @@
 package ZKBoo;
 
+import BooleanCircuit.Gate;
+import BooleanCircuit.GateType;
 import BooleanCircuit.Shares;
+import Util.Tuple;
 
 import javax.crypto.SecretKey;
+import java.util.Arrays;
 import java.util.HashMap;
 
-import static Util.Util.*;
+import static Util.Converter.convertByteArrayToBooleanArray;
 import static Util.Converter.convertBooleanArrayToByteArray;
-import static ZKBoo.Prover.randomness;
+import static Util.Util.getOutput;
+import static Util.Util.nextParty;
 
 // Verify the output of the prover is correct and reject otherwise
 public class Verifier {
-    View[] views;
+    Tuple<View> views;
     SecretKey[] seeds;
     int inputSize;
     int outputSize;
     int[][] gates;
 
     Shares sharesObj;
-    private int input;
     private boolean[][] shares;
     private int party;
-    private byte[] bArray;
-    private byte[] zArray;
+    private boolean[][] outputShares;
+    private byte[][] commitsArrays;
+    private byte[] hashChallenge;
+    private byte[] output;
+
+    HashMap<Integer, Boolean> wiresParty = new HashMap<>();
+    HashMap<Integer, Boolean> wiresNextParty = new HashMap<>();
+    private int numberOfAndGates;
 
     public Verifier(int[][] gates) {
         this.gates = gates;
@@ -30,65 +40,128 @@ public class Verifier {
     }
 
     public void receiveProof(Proof proof) {
-        this.views = proof.views;
-        this.party = proof.party;
-        this.seeds = proof.seedsForInputs;
-        this.inputSize = proof.inputSize;
-        this.outputSize = proof.outputSize;
-        this.gates = proof.gates;
-        this.input = proof.input;
-        this.party = proof.party;
-        this.zArray = proof.zArray;
-        this.bArray = proof.bArray;
+        this.output = proof.output;
+        this.party = proof.party; // index of party
+        this.hashChallenge = proof.hashChallenge; // challenge e
+        this.inputSize = proof.inputSize; // n
+        this.outputSize = proof.outputSize; // m
+        this.numberOfAndGates = proof.numberOfAndGates; // number of AND gates
+        this.gates = proof.gates; // gates from boolean circuit
+        this.commitsArrays = proof.commitsArrays; // c_e, c_e+1
+        this.outputShares = proof.outputShares; // b_e
+        this.views = proof.views; // w_e, w_e+1
 
-        sharesObj = new Shares(seeds);
-        this.shares = sharesObj.getSharesForVerifier();
-
-        byte[] xParty = retrieveXParty(party);
-        byte[] xNextParty = retrieveXNextParty(nextParty(party));
-        byte[] viewNextParty = convertBooleanArrayToByteArray(views[nextParty(party)].views);
-        byte[] viewParty = calculateView(xParty, xNextParty, randomness[party], randomness[nextParty(party)]);
-
-        if(verify()) { // TODO: implement verify()
+        if(verify()) {
             System.out.println("Proof is correct");
         } else {
             System.out.println("Proof is incorrect");
         }
     }
 
-    private byte[] calculateView(byte[] xParty, byte[] xNextParty, boolean[] randomness, boolean[] randomness1) {
-        byte[] view = new byte[xParty.length];
-        return view;
+    private byte[] recover(boolean[][] outputShares) {
+        // Recover the output from the output shares
+        boolean[] yRecovered = new boolean[outputShares[0].length];
+        boolean[] yRecoveredPart1 = outputShares[0];
+        boolean[] yRecoveredPart2 = outputShares[1];
+        boolean[] yRecoveredPart3 = outputShares[2];
+        for (int j = 0; j < yRecoveredPart1.length; j++) {
+            yRecovered[j] = yRecoveredPart1[j] ^ yRecoveredPart2[j] ^ yRecoveredPart3[j];
+        }
+        return convertBooleanArrayToByteArray(yRecovered);
     }
 
-    private byte[] retrieveXNextParty(int i) {
-        if(i == 0) {
-            return convertBooleanArrayToByteArray(sharesObj.getShares(input)[0]);
-        } else if(i == 1) {
-            return convertBooleanArrayToByteArray(sharesObj.getShares(input)[1]);
-        } else {
-            System.arraycopy(zArray, zArray.length-outputSize, new byte[outputSize], 0, zArray.length);
-            return convertBooleanArrayToByteArray(sharesObj.getShares(input)[2]);
-        }
-    }
+    private boolean checkView() {
+        // Do partial parse of the circuit given by gates, and generate the view for the party
+        // Check that the view is consistent with the output shares
+        View viewParty = views.a;
+        View viewNextParty = views.b;
 
-    private byte[] retrieveXParty(int party) {
-        if(party == 0) {
-            return convertBooleanArrayToByteArray(sharesObj.getShares(input)[1]);
-        } else if(party == 1) {
-            System.arraycopy(zArray, zArray.length-outputSize, new byte[outputSize], 0, zArray.length);
-            return convertBooleanArrayToByteArray(sharesObj.getShares(input)[2]);
-        } else {
-            System.arraycopy(bArray, bArray.length-outputSize, new byte[outputSize], 0, bArray.length);
-            return convertBooleanArrayToByteArray(sharesObj.getShares(input)[0]);
+        boolean[] randomBitStreamParty = Shares.generateRandomBits(numberOfAndGates, viewParty.seed);
+        boolean[] randomBitStreamNextParty = Shares.generateRandomBits(numberOfAndGates, viewNextParty.seed);
+
+        wiresParty = new HashMap<>();
+        wiresNextParty = new HashMap<>();
+
+            for (int i = 0; i < inputSize; i++) {
+                wiresParty.put(i, viewParty.views[i]);
+                wiresNextParty.put(i, viewNextParty.views[i]);
+            }
+
+        int andCounter = inputSize;
+        for (int i = 0; i < gates.length; i++) {
+            int[] gate = gates[i];
+            int inputWireIdx1 = gate[0];
+            int inputWireIdx2 = gate[1];
+            int op = gate[2];
+            int outputWireIdx = gate[3];
+
+            boolean inputParty1 = wiresParty.get(inputWireIdx1);
+            boolean inputParty2 = wiresParty.get(inputWireIdx2);
+            boolean inputNextParty1 = wiresNextParty.get(inputWireIdx1);
+            boolean inputNextParty2 = wiresNextParty.get(inputWireIdx2);
+
+            boolean outputParty;
+            boolean outputNextParty;
+            switch (GateType.values()[op]) {
+                case XOR:
+                    outputParty = Gate.evalXOR(inputParty1, inputParty2);
+                    outputNextParty = Gate.evalXOR(inputNextParty1, inputNextParty2);
+                    break;
+                case AND:
+                    outputParty = Gate.evalAND(inputParty1, inputParty2, inputNextParty1, inputNextParty2, randomBitStreamParty[andCounter], randomBitStreamNextParty[andCounter]);
+                    outputNextParty = viewNextParty.views[andCounter];
+
+                    if(outputParty != viewParty.views[andCounter]) {
+                        return false;
+                    }
+
+                    andCounter++;
+                    break;
+                case INV:
+                    outputParty = Gate.evalINV(inputParty1);
+                    outputNextParty = Gate.evalINV(inputNextParty1);
+                    break;
+                default:
+                    throw new Error("Gate " + op + " does not exist");
+            }
+            wiresParty.put(outputWireIdx, outputParty);
+            wiresNextParty.put(outputWireIdx, outputNextParty);
         }
+
+        return true;
     }
 
     public boolean verify() {
-        HashMap<Integer, Boolean> wires = new HashMap<>();
-        for (int i = 0; i < inputSize; i++) {
-            wires.put(i, true);
+        /*
+        (1) If Rec(y_1, y_2, y_3) != y, reject
+        (2) If y_i != Output_i(w_i) for i in {e, e+1}, reject
+        (3) If w_received_e[j] != w_generated_e[j] for j in {1, ..., n}, reject
+        (4) Output accept
+         */
+
+        // (1) If Rec(y_1, y_2, y_3) != y, reject
+        byte[] yRecovered = recover(outputShares);
+        byte[] y = output;
+
+        if(!Arrays.equals(yRecovered, y)) {
+            return false;
         }
+
+        // (3) If w_received_e[j] != w_generated_e[j] for j in {1, ..., n}, reject
+        if (!checkView()) {
+            return false;
+        }
+
+        // (2) If y_i != Output_i(w_i) for i in {e, e+1}, reject
+        boolean[] yParty = outputShares[party];
+        boolean[] yNextParty = outputShares[nextParty(party)];
+        boolean[] viewParty = getOutput(wiresParty, inputSize, outputSize, gates.length);
+        boolean[] viewNextParty = getOutput(wiresNextParty, inputSize, outputSize, gates.length);
+
+        if(!Arrays.equals(yParty, viewParty) || !Arrays.equals(yNextParty, viewNextParty)) {
+            return false;
+        }
+
         return true; // FIXME: implement
     }
 }

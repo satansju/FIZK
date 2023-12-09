@@ -57,13 +57,25 @@ public class Converter {
         return Arrays.copyOfRange(result, result.length - arrayLength, result.length);
     }
 
-    public static int convertBooleanArrayToInteger(boolean[] bools) {
+    public static int convertBooleanArrayToInteger(boolean[] booleanArray) {
         int result = 0;
-        for (int i = 0; i < bools.length; i++) {
-            if (bools[i]) {
+        for (int i = 0; i < booleanArray.length; i++) {
+            if (booleanArray[i]) {
                 result += (int) Math.pow(2, i);
             }
         }
         return result;
+    }
+
+    public static int convertByteArrayToInteger(byte[] challenge) {
+        return new BigInteger(challenge).intValue();
+    }
+
+    public static byte[][] getMultidimensionalByteArrayFromBooleanArray(boolean[][] inputArray, int length) {
+        byte[][] outputArray = new byte[length][inputArray.length];
+        for(int i = 0; i < inputArray.length; i++) {
+            outputArray[i] = convertBooleanArrayToByteArray(inputArray[i]);
+        }
+        return outputArray;
     }
 }

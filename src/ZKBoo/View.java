@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static Util.Converter.convertBooleanArrayToByteArray;
+
 class View {
 
     boolean[] views;
@@ -14,11 +16,11 @@ class View {
     int currentGate = 0;
 
     public View(int size, SecretKey seed, int outputSize) {
-        seed = seed;
+        this.seed = seed;
         //views = new boolean[size];
-        views = new boolean[size];
-        size = size;
-        outputSize = outputSize;
+        this.views = new boolean[size];
+        this.size = size;
+        this.outputSize = outputSize;
     }
 
     public void updateView(boolean val) {

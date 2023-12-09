@@ -1,18 +1,14 @@
 package ZKBoo;
 
-import BooleanCircuit.Circuit;
 import BooleanCircuit.Gate;
 import BooleanCircuit.GateType;
 import BooleanCircuit.Shares;
-import Util.Converter;
+import Util.Tuple;
 import org.junit.Assert;
 
 import javax.crypto.SecretKey;
-import java.io.File;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -57,9 +53,6 @@ public class Prover {
         this.randomness = shareObj.generateBitStreams(numberOfAndGates);
     }
 
-    private static final int KEY_LENGTH = 256;
-    private static final int ITERATION_COUNT = 65536;
-
     private static char[] byteArrayToCharArray(byte[] byteArray, java.nio.charset.Charset charset) {
         // Convert byte array to String using the specified character set
         String str = new String(byteArray, charset);
@@ -73,8 +66,8 @@ public class Prover {
         for (int gateIdx = 0; gateIdx < gates.length; gateIdx++) {
             int inputWire1 = gates[gateIdx][0];
             int inputWire2 = gates[gateIdx][1];
-            int op = gates[gateIdx][2];
             int outputWire = gates[gateIdx][3];
+            int op = gates[gateIdx][2];
 
             for (int party = 0; party < 3; party++) {
                 HashMap<Integer, Boolean> partyWires = wires.get(party);
@@ -90,8 +83,6 @@ public class Prover {
                         HashMap<Integer, Boolean> wireNextParty = wires.get(nextParty(party));
                         boolean inputNextParty1 = wireNextParty.get(inputWire1);
                         boolean inputNextParty2 = wireNextParty.get(inputWire2);
-
-                        // FIXME - learn how to get the randomness // TODO - det her skal gøres hvor man får info fra de andre parter
                         output = Gate.evalAND(input1, input2, inputNextParty1, inputNextParty2, randomness[party][andGateIdx], randomness[nextParty(party)][andGateIdx]);
                         break;
                     case INV:
@@ -127,9 +118,10 @@ public class Prover {
         for (int i = 0; i < 3; i++) {
             /*boolean[] outputShare = new boolean[numberOfOutputs];*/
 
-            for(int j = 0; j < numberOfOutputs; j++) {
-                outputShares[i][j] = wires.get(i).get(gates.length - 1 - numberOfOutputs + j);
-            }
+            outputShares[i] = getOutput(wires.get(i), numberOfInputs, numberOfOutputs, gates.length);
+            /*for(int j = 0; j < numberOfOutputs; j++) {
+                outputShares[i][j] = wires.get(i).get(numberOfInputs + gates.length - 1 - numberOfOutputs + j);
+            }*/
 
             /*System.arraycopy( wires.get(i).values().toArray(), (wires.get(i).size() - 1 - 256), outputShare, 0, 256);*/
             /*outputShares[i] = outputShare;*/
@@ -175,6 +167,10 @@ public class Prover {
         System.out.println("OutputCombined: " + Arrays.toString(output));
         System.out.println("Output: " + convertBooleanArrayToInteger(output));
 
+        for(int i = 0; i < 3; i++) {
+            Assert.assertTrue(Arrays.equals(outputShares[i], getOutput(wires.get(i), numberOfInputs, numberOfOutputs, gates.length)));
+        }
+
     }
 
     private boolean[] recoverOutput(boolean[][] outputsShares) {
@@ -202,6 +198,32 @@ public class Prover {
         }
     }
 
+    Tuple<View> getZ(int challengeParty, View[] views) {
+        if(challengeParty == 0) {
+            return new Tuple<>(views[0], views[1]);
+        } else if(challengeParty == 1) {
+            return new Tuple<>(views[1], views[2]);
+        } else if(challengeParty == 2) {
+            return new Tuple<>(views[2], views[0]);
+        } else {
+            throw new Error("Party " + challengeParty + " does not exist");
+        }
+    }
+
+    private void addShareToViewsAndWires(boolean[][] shares) {
+        for (int i = 0; i < 3; i++) {
+            // add all input bits for the share to the view
+            boolean[] share = shares[i];
+            views[i].addInputShare(share);
+            wires.add(new HashMap<>());
+            /*wires.get(i).put(0, false);*/
+            for (int j = 0; j < share.length; j++) {
+                wires.get(i).put(j, share[j]);
+            }
+            System.out.println(wires.get(i));
+        }
+    }
+
     public Proof sendProofToVerifier() {
         if(views == null) {
             throw new Error("Output has not been computed yet");
@@ -209,7 +231,6 @@ public class Prover {
         // obtain challenge (NON-INTERACTIVE) and do mod 3 to know which views to prepare
         // Prepare view e and e+1
 
-        View[] viewsForProof = new View[]{views[0], views[1]};
         SecretKey[] seedsForProof = new SecretKey[]{secretKeys[2], secretKeys[3], secretKeys[4]};
         byte[][] commits = new byte[3][];
         byte[][] decommits = new byte[3][];
@@ -247,80 +268,21 @@ public class Prover {
         aBuffer.put(commits[2]);
         byte[] aArray = aBuffer.array();
         byte[] challenge = hash(aArray);
-
-        int challengeParty = convertByteArrayToInteger(challenge) % 3;
-        int previousParty = Math.abs(challengeParty + 2) % 3;
-
-        byte[] bi = new byte[outputShares[previousParty].length + commits[previousParty].length];
-        ByteBuffer biBuffer = ByteBuffer.wrap(bi);
-        biBuffer.put(convertBooleanArrayToByteArray(outputShares[previousParty]));
-        biBuffer.put(commits[previousParty]);
-        byte[] biArray = biBuffer.array();
-        byte[] zArray = generateZ(challengeParty, viewsForProof, seedsForProof, this.shares);
+        byte[][] bCommitsArray = commits;
+        int challengeParty = Math.abs(convertByteArrayToInteger(challenge)) % 3;
+        Tuple<View> zViewsForProof = getZ(challengeParty, views);
 
         return new Proof(
-            input,
+            convertBooleanArrayToByteArray(output),
             challengeParty,
             challenge,
-            viewsForProof,
-            seedsForProof,
             numberOfInputs,
             numberOfOutputs,
+            numberOfAndGates,
             gates,
-            biArray,
-            zArray
+            bCommitsArray,
+            outputShares,
+            zViewsForProof
         );
-    }
-
-    byte[] generateZ(int challengeParty, View[] views, SecretKey[] secretKeysForAndGates, boolean[][] shares) {
-        byte[] z;
-        ByteBuffer zBuffer;
-        byte[] zArray;
-        if(challengeParty == 0) {
-            z = new byte[views[0].views.length + views[1].views.length + secretKeysForAndGates[0].getEncoded().length + secretKeysForAndGates[1].getEncoded().length];
-            zBuffer = ByteBuffer.wrap(z);
-            zBuffer.put(convertBooleanArrayToByteArray(views[0].views));
-            zBuffer.put(convertBooleanArrayToByteArray(views[1].views));
-            zBuffer.put(secretKeysForAndGates[0].getEncoded());
-            zBuffer.put(secretKeysForAndGates[1].getEncoded());
-        } else if(challengeParty == 1) {
-            z = new byte[views[1].views.length + views[2].views.length + secretKeysForAndGates[1].getEncoded().length + secretKeysForAndGates[2].getEncoded().length + shares[2].length];
-            zBuffer = ByteBuffer.wrap(z);
-            zBuffer.put(convertBooleanArrayToByteArray(views[1].views));
-            zBuffer.put(convertBooleanArrayToByteArray(views[2].views));
-            zBuffer.put(secretKeysForAndGates[1].getEncoded());
-            zBuffer.put(secretKeysForAndGates[2].getEncoded());
-            zBuffer.put(convertBooleanArrayToByteArray(shares[2]));
-        } else if(challengeParty == 2) {
-            z = new byte[views[2].views.length + views[0].views.length + secretKeysForAndGates[2].getEncoded().length + secretKeysForAndGates[0].getEncoded().length + shares[2].length];
-            zBuffer = ByteBuffer.wrap(z);
-            zBuffer.put(convertBooleanArrayToByteArray(views[2].views));
-            zBuffer.put(convertBooleanArrayToByteArray(views[0].views));
-            zBuffer.put(secretKeysForAndGates[2].getEncoded());
-            zBuffer.put(secretKeysForAndGates[0].getEncoded());
-            zBuffer.put(convertBooleanArrayToByteArray(shares[0]));
-        } else {
-            throw new Error("Party " + challengeParty + " does not exist");
-        }
-        zArray = zBuffer.array();
-        return zArray;
-    }
-
-    private int convertByteArrayToInteger(byte[] challenge) {
-        return new BigInteger(challenge).intValue();
-    }
-
-    private void addShareToViewsAndWires(boolean[][] shares) {
-        for (int i = 0; i < 3; i++) {
-            // add all input bits for the share to the view
-            boolean[] share = shares[i];
-            views[i].addInputShare(share);
-            wires.add(new HashMap<>());
-            wires.get(i).put(0, false);
-            for (int j = 0; j < share.length; j++) {
-                wires.get(i).put(j, share[j]);
-            }
-            System.out.println(wires.get(i));
-        }
     }
 }
