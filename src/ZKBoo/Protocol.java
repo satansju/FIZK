@@ -8,18 +8,15 @@ import BooleanCircuit.Circuit;
  */
 public class Protocol {
     // TODO / FIXME: run multiple times to get better soundness error
-    public static void main(String[] args) {
-        Circuit circuit = new Circuit("src/BooleanCircuit/input/sha256.txt");
+    public static boolean runProtocol(String path, int input) {
+        Circuit circuit = new Circuit(path);
         circuit.parseCircuit();
         int[][] gates = circuit.getGates();
-        int input = 1;
         System.out.println("No of AND gates: " + circuit.getNumberOfAndGates());
         Prover prover = new Prover(input, gates, circuit.numberOfInputs, circuit.numberOfOutputs, circuit.getNumberOfAndGates());
         Verifier verifier = new Verifier(gates);
 
         prover.doMPCInTheHead();
-        verifier.receiveProof(prover.sendProofToVerifier());
-
-        // verifier.receiveProof(prover.views, prover.getSeed, prover.size, prover.outputSize, gates);
+        return verifier.receiveProof(prover.sendProofToVerifier());
     }
 }

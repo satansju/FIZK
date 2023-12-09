@@ -12,14 +12,14 @@ public class Converter {
         if (arr.length < 8) {
             Integer number = 0;
             for (int i = 0; i < arr.length; i++) {
-                if (arr[i]) {
+                if (arr[arr.length - i - 1]) {
                     number += (int) Math.pow(2, i);
                 }
             }
             return new byte[]{number.byteValue()};
         }
 
-        int n = arr.length / 8;
+        int n = (int) Math.ceil(arr.length / 8.0);
         byte[] bytes = new byte[n];
         for (int i = 0; i < arr.length; i++) {
             if (arr[i]) {

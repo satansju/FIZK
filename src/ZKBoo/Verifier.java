@@ -9,7 +9,6 @@ import javax.crypto.SecretKey;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import static Util.Converter.convertByteArrayToBooleanArray;
 import static Util.Converter.convertBooleanArrayToByteArray;
 import static Util.Util.getOutput;
 import static Util.Util.nextParty;
@@ -39,7 +38,7 @@ public class Verifier {
 
     }
 
-    public void receiveProof(Proof proof) {
+    public boolean receiveProof(Proof proof) {
         this.output = proof.output;
         this.party = proof.party; // index of party
         this.hashChallenge = proof.hashChallenge; // challenge e
@@ -53,8 +52,10 @@ public class Verifier {
 
         if(verify()) {
             System.out.println("Proof is correct");
+            return true;
         } else {
             System.out.println("Proof is incorrect");
+            return false;
         }
     }
 
@@ -87,9 +88,9 @@ public class Verifier {
                 wiresNextParty.put(i, viewNextParty.views[i]);
             }
 
-        int andCounter = inputSize;
-        for (int i = 0; i < gates.length; i++) {
-            int[] gate = gates[i];
+        int viewIdx = inputSize;
+        for (int gateIdx = 0; gateIdx < gates.length; gateIdx++) {
+            int[] gate = gates[gateIdx];
             int inputWireIdx1 = gate[0];
             int inputWireIdx2 = gate[1];
             int op = gate[2];
@@ -108,14 +109,16 @@ public class Verifier {
                     outputNextParty = Gate.evalXOR(inputNextParty1, inputNextParty2);
                     break;
                 case AND:
-                    outputParty = Gate.evalAND(inputParty1, inputParty2, inputNextParty1, inputNextParty2, randomBitStreamParty[andCounter], randomBitStreamNextParty[andCounter]);
-                    outputNextParty = viewNextParty.views[andCounter];
+                    boolean r1 = randomBitStreamParty[gateIdx];
+                    boolean r2 = randomBitStreamNextParty[gateIdx];
+                    outputParty = Gate.evalAND(inputParty1, inputParty2, inputNextParty1, inputNextParty2, r1, r2);
+                    outputNextParty = viewNextParty.views[viewIdx];
 
-                    if(outputParty != viewParty.views[andCounter]) {
+                    if(outputParty != viewParty.views[viewIdx]) {
                         return false;
                     }
 
-                    andCounter++;
+                    viewIdx++;
                     break;
                 case INV:
                     outputParty = Gate.evalINV(inputParty1);

@@ -49,7 +49,7 @@ public class Prover {
         // (1) Sample random seeds k_1, k_2, k_3
         this.secretKeys = Shares.getSecretKeys();
         // (2) Compute (x_1, x_2, x_3) <- Share(x; k_1, k_2, k_3)
-        this.shares = shareObj.getShares(input);
+        this.shares = shareObj.getShares(input, numberOfInputs);
         this.randomness = shareObj.generateBitStreams(numberOfAndGates);
     }
 
@@ -151,9 +151,9 @@ public class Prover {
         int viewSize = numberOfInputs + numberOfAndGates;
 
         // initialise views with the seeds that were used for the randomness for the AND gates - secretKey 2, 3 and 4 (0 and 1 were used for creating the input shares)
-        views[0] = new View(viewSize, secretKeys[2], 256);
-        views[1] = new View(viewSize, secretKeys[3], 256);
-        views[2] = new View(viewSize, secretKeys[4], 256);
+        views[0] = new View(viewSize, secretKeys[2], numberOfOutputs);
+        views[1] = new View(viewSize, secretKeys[3], numberOfOutputs);
+        views[2] = new View(viewSize, secretKeys[4], numberOfOutputs);
 
 
         // add shares to each party's view and the wires for computation:

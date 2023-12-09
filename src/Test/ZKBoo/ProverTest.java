@@ -28,7 +28,7 @@ public class ProverTest
     @Test
     public void testRandomnessGivesAdditiveSharesZero() {
         Shares sharesClass = new Shares();
-        boolean[][] shares = sharesClass.getShares(0);
+        boolean[][] shares = sharesClass.getShares(0, 512);
         boolean[] share1 = shares[0];
         boolean[] share2 = shares[1];
         boolean[] share3 = shares[2];
@@ -50,7 +50,7 @@ public class ProverTest
     @Test
     public void testRandomnessGivesAdditiveSharesOne() {
         Shares sharesClass = new Shares();
-        boolean[][] shares = sharesClass.getShares(1);
+        boolean[][] shares = sharesClass.getShares(1, 512);
         for (boolean[] share : shares) {
             assertTrue(share.length == 512);
         }
@@ -69,7 +69,7 @@ public class ProverTest
     @Test
     public void testRandomnessGivesAdditiveShares666() {
         Shares sharesClass = new Shares();
-        boolean[][] shares = sharesClass.getShares(666);
+        boolean[][] shares = sharesClass.getShares(666, 512);
         for (boolean[] share : shares) {
             assertTrue(share.length == 512);
         }

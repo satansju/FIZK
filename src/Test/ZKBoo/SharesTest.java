@@ -23,7 +23,7 @@ public class SharesTest {
         int numberOfInputs = 512;
         boolean[] inputBits = intToBooleanArray(input, numberOfInputs);
         Shares sharesObj = new Shares();
-        boolean[][] shares = sharesObj.getShares(input);
+        boolean[][] shares = sharesObj.getShares(input, numberOfInputs);
         System.out.println(sharesObj.getSecretKeys().length);
         boolean[] x1 = shares[0];
         boolean[] x2 = shares[1];

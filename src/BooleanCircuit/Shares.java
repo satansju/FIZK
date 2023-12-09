@@ -44,18 +44,19 @@ public class Shares {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
 
-            byte[] bytes = new byte[length / 8];
+            int numberOfBytes = (int) Math.ceil(length / 8.0);
+            byte[] bytes = new byte[length];
             byte[] counter = new byte[16];
             byte[] encryptedBytes = new byte[16];
 
-            for (int i = 0; i < length / 8; i += 16) {
+            for (int i = 0; i < numberOfBytes; i += 16) {
                 encryptedBytes = cipher.doFinal(counter);
                 System.arraycopy(encryptedBytes, 0, bytes, i, Math.min(16, length - i));
                 incrementCounter(counter);
             }
 
             boolean[] convertedBytes = convertByteArrayToBooleanArray(bytes);
-            return convertedBytes;
+            return Arrays.copyOfRange(convertedBytes, 0, length);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -89,7 +90,7 @@ public class Shares {
         return secretKeys;
     }
 
-    public static boolean[][] getShares(int x) {
+    public static boolean[][] getShares(int x, int numberOfInputs) {
         try {
             // Generate a random secret key for AES with 256-bit key size
 
@@ -99,7 +100,7 @@ public class Shares {
             boolean[] k2 = generateRandomBytes(secretKeys[1]);
 
             // Calculate additive shares x1, x2, x3
-            boolean[][] shares = calculateShares(x, k1, k2);
+            boolean[][] shares = calculateShares(x, numberOfInputs, k1, k2);
             return shares;
         } catch (Exception e) {
             e.printStackTrace();
@@ -137,8 +138,7 @@ public class Shares {
     }
 
     // Calculate additive share using AES encryption
-    private static boolean[][] calculateShares(int x, boolean[] k1, boolean[] k2) throws Exception {
-        int numberOfInputs = 512;
+    private static boolean[][] calculateShares(int x, int numberOfInputs, boolean[] k1, boolean[] k2) throws Exception {
         boolean[][] shares = new boolean[3][numberOfInputs];
         boolean[] inputBits = intToBooleanArray(x, numberOfInputs);
         System.out.println(Arrays.toString(inputBits));
@@ -150,9 +150,5 @@ public class Shares {
             assert(inputBits[i] == shares[2][i] ^ shares[0][i] ^ shares[1][i]);
         }
         return shares;
-    }
-
-    public boolean[][] getSharesForVerifier() {
-        return null;
     }
 }
