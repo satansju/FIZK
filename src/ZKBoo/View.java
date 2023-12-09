@@ -9,20 +9,18 @@ import static Util.Converter.convertBooleanArrayToByteArray;
 
 class View {
 
-    public final boolean[] randomness;
     boolean[] views;
     SecretKey seed;
     int size;
     int outputSize;
     int currentGate = 0;
 
-    public View(int size, SecretKey seed, int outputSize, boolean[] randomness) {
+    public View(int size, SecretKey seed, int outputSize) {
         this.seed = seed;
         //views = new boolean[size];
         this.views = new boolean[size];
         this.size = size;
         this.outputSize = outputSize;
-        this.randomness = randomness;
     }
 
     public void updateView(boolean val) {

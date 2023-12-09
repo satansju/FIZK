@@ -50,7 +50,9 @@ public class ProtocolTest {
     @Test
     public void testRunProtocolOnSHACircuit() throws Exception {
         String path = "src/BooleanCircuit/input/sha256.txt";
-        boolean result = runProtocol(path, 1);
-        Assert.assertTrue(result);
+        for (int i = 0; i<8; i++) {
+            boolean result = runProtocol(path, i);
+            Assert.assertTrue(result);
+        }
     }
 }

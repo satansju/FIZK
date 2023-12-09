@@ -150,9 +150,9 @@ public class Prover {
         int viewSize = numberOfInputs + numberOfAndGates;
 
         // initialise views with the seeds that were used for the randomness for the AND gates - secretKey 2, 3 and 4 (0 and 1 were used for creating the input shares)
-        this.views[0] = new View(viewSize, secretKeys[2], numberOfOutputs, randomness[0]);
-        this.views[1] = new View(viewSize, secretKeys[3], numberOfOutputs, randomness[1]);
-        this.views[2] = new View(viewSize, secretKeys[4], numberOfOutputs, randomness[2]);
+        this.views[0] = new View(viewSize, secretKeys[2], numberOfOutputs);
+        this.views[1] = new View(viewSize, secretKeys[3], numberOfOutputs);
+        this.views[2] = new View(viewSize, secretKeys[4], numberOfOutputs);
 
 
         // add shares to each party's view and the wires for computation:
