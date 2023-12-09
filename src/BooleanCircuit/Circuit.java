@@ -46,12 +46,12 @@ public class Circuit {
         numberOfGates = Integer.parseInt(numbers[0]);
 
         gates = new int[numberOfGates][4];
-        System.out.println(gates.length);
-        System.out.println(gates[0].length);
+        /*System.out.println(gates.length);
+        System.out.println(gates[0].length);*/
 
         String line2 = myReader.nextLine();
         String[] numbers2 = line2.split(" ", 3);
-        System.out.println("Numbers: " + Arrays.toString(numbers2));
+        /*System.out.println("Numbers: " + Arrays.toString(numbers2));*/
         numberOfInputs = Integer.parseInt(numbers2[0]);
         numberOfOutputs = Integer.parseInt(numbers2[2]);
         numberOfAndGates = 0;
@@ -60,7 +60,7 @@ public class Circuit {
         while (myReader.hasNext()) {
             String line = myReader.nextLine();
             String[] splitLine = line.split(" ", 6);
-            System.out.println(Arrays.toString(splitLine));
+            /*System.out.println(Arrays.toString(splitLine));*/
 
             int gateType = GateType.valueOf(splitLine[splitLine.length - 1]).ordinal();
             if(gateType == GateType.AND.ordinal()) {
@@ -77,7 +77,7 @@ public class Circuit {
             }
             i += 1;
         }
-        System.out.println("Number of And Gates is: " + numberOfAndGates);
+        /*System.out.println("Number of And Gates is: " + numberOfAndGates);*/
     }
 
     public int[][] getGates() {
@@ -114,7 +114,7 @@ public class Circuit {
         numberOfOutputs = Integer.parseInt(numbers2[2]);
 
 
-        System.out.println(numberOfGates + " " + numberOfWires + " " + numberOfInputs + " " + numberOfOutputs);
+        /*System.out.println(numberOfGates + " " + numberOfWires + " " + numberOfInputs + " " + numberOfOutputs);*/
 
         initializeValues(input);
 // TODO: read in the circuit first and then evaluate

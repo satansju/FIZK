@@ -88,6 +88,7 @@ public class Verifier {
                 wiresNextParty.put(i, viewNextParty.views[i]);
             }
 
+        int andGateIdx = 0;
         int viewIdx = inputSize;
         for (int gateIdx = 0; gateIdx < gates.length; gateIdx++) {
             int[] gate = gates[gateIdx];
@@ -95,6 +96,7 @@ public class Verifier {
             int inputWireIdx2 = gate[1];
             int op = gate[2];
             int outputWireIdx = gate[3];
+
 
             boolean inputParty1 = wiresParty.get(inputWireIdx1);
             boolean inputParty2 = wiresParty.get(inputWireIdx2);
@@ -109,15 +111,19 @@ public class Verifier {
                     outputNextParty = Gate.evalXOR(inputNextParty1, inputNextParty2);
                     break;
                 case AND:
-                    boolean r1 = randomBitStreamParty[gateIdx];
-                    boolean r2 = randomBitStreamNextParty[gateIdx];
+                    boolean r1 = randomBitStreamParty[andGateIdx];
+                    boolean r2 = randomBitStreamNextParty[andGateIdx];
                     outputParty = Gate.evalAND(inputParty1, inputParty2, inputNextParty1, inputNextParty2, r1, r2);
                     outputNextParty = viewNextParty.views[viewIdx];
-
+                    System.out.println("Gate idxW1:" + inputWireIdx1 + " idxW2 " + inputWireIdx2 + " OP: "+ op + " idxO: " + outputWireIdx);
+                    System.out.println("Testing gate: " + gateIdx + " with and view index: " + viewIdx);
+                    System.out.println("I1A: " + inputParty1 + " I1B: " + inputParty2 + " I2A: " + inputNextParty1 + " I2B: " + inputNextParty2 + " R1: " + r1 + " R2: " + r2);
+                    System.out.println("Output party: " + outputParty + " Output next party: " + outputNextParty);
                     if(outputParty != viewParty.views[viewIdx]) {
                         return false;
                     }
-
+                    System.out.println("Gate " + gateIdx + " is correct");
+                    andGateIdx++;
                     viewIdx++;
                     break;
                 case INV:

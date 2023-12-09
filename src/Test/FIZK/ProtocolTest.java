@@ -23,7 +23,16 @@ public class ProtocolTest {
     @Test
     public void testRunProtocolOn3AndSCircuit() throws Exception {
         String path = "src/BooleanCircuit/input/test3ANDS.txt";
-        for (int i = 0; i<4; i++) {
+        for (int i = 0; i<63; i++) {
+            boolean result = runProtocol(path, i);
+            Assert.assertTrue(result);
+        }
+    }
+
+    @Test
+    public void testRunProtocolOnChainedAndCircuit() throws Exception {
+        String path = "src/BooleanCircuit/input/testChainedAND.txt";
+        for (int i = 0; i<31; i++) {
             boolean result = runProtocol(path, i);
             Assert.assertTrue(result);
         }

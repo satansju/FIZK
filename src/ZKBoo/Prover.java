@@ -74,7 +74,6 @@ public class Prover {
                 boolean output;
                 boolean input1 = partyWires.get(inputWire1);
                 boolean input2 = partyWires.get(inputWire2);
-
                 switch (GateType.values()[op]) {
                     case XOR:
                         output = Gate.evalXOR(input1, input2);
@@ -147,13 +146,13 @@ public class Prover {
         // 1) and 2) are done in the constructor
 
         // 3)
-        views = new View[3];
+        this.views = new View[3];
         int viewSize = numberOfInputs + numberOfAndGates;
 
         // initialise views with the seeds that were used for the randomness for the AND gates - secretKey 2, 3 and 4 (0 and 1 were used for creating the input shares)
-        views[0] = new View(viewSize, secretKeys[2], numberOfOutputs);
-        views[1] = new View(viewSize, secretKeys[3], numberOfOutputs);
-        views[2] = new View(viewSize, secretKeys[4], numberOfOutputs);
+        this.views[0] = new View(viewSize, secretKeys[2], numberOfOutputs, randomness[0]);
+        this.views[1] = new View(viewSize, secretKeys[3], numberOfOutputs, randomness[1]);
+        this.views[2] = new View(viewSize, secretKeys[4], numberOfOutputs, randomness[2]);
 
 
         // add shares to each party's view and the wires for computation:
@@ -214,8 +213,8 @@ public class Prover {
         for (int i = 0; i < 3; i++) {
             // add all input bits for the share to the view
             boolean[] share = shares[i];
-            views[i].addInputShare(share);
-            wires.add(new HashMap<>());
+            this.views[i].addInputShare(share);
+            this.wires.add(new HashMap<>());
             /*wires.get(i).put(0, false);*/
             for (int j = 0; j < share.length; j++) {
                 wires.get(i).put(j, share[j]);
