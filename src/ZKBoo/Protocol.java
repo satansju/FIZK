@@ -12,7 +12,7 @@ public class Protocol {
         Circuit circuit = new Circuit(path);
         circuit.parseCircuit();
         int[][] gates = circuit.getGates();
-        System.out.println("No of AND gates: " + circuit.getNumberOfAndGates());
+        // System.out.println("No of AND gates: " + circuit.getNumberOfAndGates());
         int numberOfInputs = circuit.getNumberOfInputs();
         int numberOfOutputs = circuit.getNumberOfOutputs();
         int numberOfAndGates = circuit.getNumberOfAndGates();
@@ -20,6 +20,13 @@ public class Protocol {
         Verifier verifier = new Verifier(gates, numberOfInputs, numberOfOutputs, numberOfAndGates);
 
         prover.doMPCInTheHead();
-        return verifier.receiveProof(prover.sendProofToVerifier());
+        verifier.receiveProof(prover.sendProofToVerifier());
+        if(verifier.verify()) {
+            // System.out.println("Proof is correct");
+            return true;
+        } else {
+            // System.out.println("Proof is incorrect");
+            return false;
+        }
     }
 }

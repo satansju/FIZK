@@ -3,6 +3,9 @@ package Test.FIZK;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.security.SecureRandom;
+import java.security.Timestamp;
+
 import static ZKBoo.Protocol.runProtocol;
 
 /**
@@ -50,9 +53,20 @@ public class ProtocolTest {
     @Test
     public void testRunProtocolOnSHACircuit() throws Exception {
         String path = "src/BooleanCircuit/input/sha256.txt";
-        for (int i = 0; i<8; i++) {
-            boolean result = runProtocol(path, i);
+        SecureRandom secureRandom = new SecureRandom();
+        long totalDuration = 0L;
+        long numberOfRounds = 1000L;
+        for (int i = 0; i<numberOfRounds; i++) {
+            System.out.println(i + "/" + numberOfRounds);
+            int input = secureRandom.nextInt();
+            long start = System.currentTimeMillis();
+            boolean result = runProtocol(path, input);
+            long end = System.currentTimeMillis();
+            long duration = end-start;
+            totalDuration += duration;
             Assert.assertTrue(result);
         }
+        System.out.println("Average time is: " + ((double) totalDuration/numberOfRounds));
+
     }
 }

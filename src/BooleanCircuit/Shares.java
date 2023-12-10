@@ -129,10 +129,10 @@ public class Shares {
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] encryptedBytes = cipher.doFinal(bytes);
-        System.out.println("length of block of encryptedBytes: " + encryptedBytes.length);
+        // System.out.println("length of block of encryptedBytes: " + encryptedBytes.length);
 
         boolean[] convertedBytes = convertByteArrayToBooleanArray(encryptedBytes);
-        System.out.println("length of AES block: " + convertedBytes.length);
+        // System.out.println("length of AES block: " + convertedBytes.length);
 
         return convertedBytes;
     }
@@ -141,7 +141,7 @@ public class Shares {
     private static boolean[][] calculateShares(int x, int numberOfInputs, boolean[] k1, boolean[] k2) throws Exception {
         boolean[][] shares = new boolean[3][numberOfInputs];
         boolean[] inputBits = intToBooleanArray(x, numberOfInputs);
-        System.out.println(Arrays.toString(inputBits));
+        // System.out.println(Arrays.toString(inputBits));
 
         for (int i = 0; i < numberOfInputs; i++) {
             shares[0][i] = k1[i];

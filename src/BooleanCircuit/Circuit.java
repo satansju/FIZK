@@ -168,7 +168,7 @@ public class Circuit {
         byte[] bytes = convertBooleanArrayToByteArray(arr);
 
         output = new BigInteger(bytes);
-        System.out.println(output);
+        // System.out.println(output);
     }
 
     public BigInteger getOutput() {
@@ -192,7 +192,7 @@ public class Circuit {
         for (T k : hashMap.keySet()) {
             String key = k.toString();
             String value = hashMap.get(k).toString();
-            System.out.println(key + ": " + value);
+            // System.out.println(key + ": " + value);
         }
     }
 
@@ -208,7 +208,7 @@ public class Circuit {
             case "INV":
                 return !wires.get(inputs[0]);
             default:
-                System.out.println("Wrong input: " + op);
+                // System.out.println("Wrong input: " + op);
                 throw new Error("Gate " + op + " does not exist");
         }
     }
@@ -220,7 +220,7 @@ public class Circuit {
 
 
         byte[] byte0 = BigInteger.ZERO.toByteArray();
-        System.out.println(Arrays.toString(byte0));
+        // System.out.println(Arrays.toString(byte0));
 
         for (byte b : byte0) {
             Assert.assertEquals(0, b);
@@ -231,9 +231,9 @@ public class Circuit {
 
         Path currentRelativePath = Paths.get("");
         String s = currentRelativePath.toAbsolutePath().toString();
-        System.out.println("Current absolute path is: " + s);
+        // System.out.println("Current absolute path is: " + s);
         String input = s + File.separator + "src" + File.separator + "BooleanCircuit" + File.separator + "input" + File.separator + "sha256.txt";
-        System.out.println("Input: " + input);
+        // System.out.println("Input: " + input);
 
         Circuit parser = new Circuit(input);
 
