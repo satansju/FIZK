@@ -51,7 +51,7 @@ public class ProtocolTest {
     }
 
     @Test
-    public void testRunProtocolOnSHACircuit() throws Exception {
+    public void measurePerformanceOfProtocol() throws Exception {
         String path = "src/BooleanCircuit/input/sha256.txt";
         SecureRandom secureRandom = new SecureRandom();
         long totalDuration = 0L;
@@ -68,5 +68,15 @@ public class ProtocolTest {
         }
         System.out.println("Average time is: " + ((double) totalDuration/numberOfRounds));
 
+    }
+
+    @Test
+    public void testRunProtocolOnSHACircuit() throws Exception {
+        String path = "src/BooleanCircuit/input/sha256.txt";
+        SecureRandom secureRandom = new SecureRandom();
+        int input = secureRandom.nextInt();
+        long start = System.currentTimeMillis();
+        boolean result = runProtocol(path, input);
+        Assert.assertTrue(result);
     }
 }
