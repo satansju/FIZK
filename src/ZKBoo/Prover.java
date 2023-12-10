@@ -7,10 +7,7 @@ import Util.Tuple;
 import org.junit.Assert;
 
 import javax.crypto.SecretKey;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -105,10 +102,7 @@ public class Prover {
             if(GateType.values()[op] == GateType.AND) {
                 andGateIdx++;
             }
-
-
         }
-
     }
 
     public boolean[][] getOutputShares() {
@@ -160,7 +154,7 @@ public class Prover {
 
         evaluateCircuit();
         System.out.println("Views: " + Arrays.toString(views));
-        System.out.println("View lengths: " + views[0].views.length + ", " + views[1].views.length + ", " + views[2].views.length);
+        System.out.println("View lengths: " + views[0].andGateEvaluations.length + ", " + views[1].andGateEvaluations.length + ", " + views[2].andGateEvaluations.length);
         this.outputShares = getOutputShares();
         this.output = recoverOutput(outputShares);
         System.out.println("OutputCombined: " + Arrays.toString(output));
@@ -178,23 +172,6 @@ public class Prover {
             output[i] = outputsShares[0][i] ^ outputsShares[1][i] ^ outputsShares[2][i];
         }
         return output;
-    }
-
-    public byte[] hash(byte[] commit) {
-        // make a commitment to the views, outputs, seeds etc.
-        // send it to the verifier
-        // make a hashChallenge by hashing the commitment
-
-        MessageDigest messageDigest;
-        try {
-            messageDigest = MessageDigest.getInstance("SHA-256");
-
-            //Assert.assertTrue(byte0 == );
-            return messageDigest.digest(commit);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            throw new Error(e);
-        }
     }
 
     Tuple<View> getZ(int challengeParty, View[] views) {
@@ -236,23 +213,24 @@ public class Prover {
 
         for (int j = 0; j < 3; j++) {
             byte[] kj = seedsForProof[j].getEncoded();
-            byte[] xj = convertBooleanArrayToByteArray(shares[j]);
-            boolean[] vjBoolean = views[j].views;
+            //byte[] xj = convertBooleanArrayToByteArray(shares[j]);
+            boolean[] vjBoolean = views[j].andGateEvaluations;
             byte[] vj = convertBooleanArrayToByteArray(vjBoolean);
-            byte[] combined = new byte[kj.length + xj.length + vj.length];
+            // byte[] combined = new byte[kj.length + xj.length + vj.length];
+            byte[] combined = new byte[kj.length + vj.length];
             ByteBuffer commitBuffer = ByteBuffer.wrap(combined);
             commitBuffer.put(kj);
-            commitBuffer.put(xj);
+            // commitBuffer.put(xj);
             commitBuffer.put(vj);
             byte[] cj = commitBuffer.array();
             commits[j] = hash(cj);
-
-            byte[] decommitCombined = new byte[kj.length + xj.length];
-            ByteBuffer decommitCombinedBuffer = ByteBuffer.wrap(decommitCombined);
-            decommitCombinedBuffer.put(kj);
-            decommitCombinedBuffer.put(xj);
-            byte[] decommitCombinedArray = decommitCombinedBuffer.array();
-            decommits[j] = decommitCombinedArray;
+            decommits[j] = cj;
+            // byte[] decommitCombined = new byte[kj.length + xj.length];
+            // ByteBuffer decommitCombinedBuffer = ByteBuffer.wrap(decommitCombined);
+            // decommitCombinedBuffer.put(kj);
+            // decommitCombinedBuffer.put(xj);
+            // byte[] decommitCombinedArray = decommitCombinedBuffer.array();
+            //decommits[j] = decommitCombinedArray;
         }
 
         int outputSharesLength = outputShares[0].length + outputShares[1].length + outputShares[2].length;
@@ -275,13 +253,10 @@ public class Prover {
             convertBooleanArrayToByteArray(output),
             challengeParty,
             challenge,
-            numberOfInputs,
-            numberOfOutputs,
-            numberOfAndGates,
-            gates,
             bCommitsArray,
             outputShares,
-            zViewsForProof
+            zViewsForProof,
+                aArray
         );
     }
 }

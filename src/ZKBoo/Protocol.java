@@ -13,8 +13,11 @@ public class Protocol {
         circuit.parseCircuit();
         int[][] gates = circuit.getGates();
         System.out.println("No of AND gates: " + circuit.getNumberOfAndGates());
-        Prover prover = new Prover(input, gates, circuit.numberOfInputs, circuit.numberOfOutputs, circuit.getNumberOfAndGates());
-        Verifier verifier = new Verifier(gates);
+        int numberOfInputs = circuit.getNumberOfInputs();
+        int numberOfOutputs = circuit.getNumberOfOutputs();
+        int numberOfAndGates = circuit.getNumberOfAndGates();
+        Prover prover = new Prover(input, gates, numberOfInputs, numberOfOutputs, numberOfAndGates);
+        Verifier verifier = new Verifier(gates, numberOfInputs, numberOfOutputs, numberOfAndGates);
 
         prover.doMPCInTheHead();
         return verifier.receiveProof(prover.sendProofToVerifier());

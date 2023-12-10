@@ -17,10 +17,10 @@ import static Util.Converter.convertBooleanArrayToByteArray;
 
 public class Circuit {
     String path;
-    public Integer numberOfGates;
-    Integer numberOfWires;
-    public Integer numberOfInputs;
-    public Integer numberOfOutputs;
+    int numberOfGates;
+    int numberOfWires;
+    int numberOfInputs;
+    int numberOfOutputs;
     BigInteger output;
     HashMap<Integer, Boolean> wires = new HashMap<>();
     int[][] gates;
@@ -86,6 +86,14 @@ public class Circuit {
 
     public int getNumberOfAndGates() {
         return numberOfAndGates;
+    }
+
+    public int getNumberOfInputs() {
+        return numberOfInputs;
+    }
+
+    public int getNumberOfOutputs() {
+        return numberOfOutputs;
     }
 
     public void parse(String path, Integer input) {

@@ -109,7 +109,7 @@ public class Shares {
     }
 
     // Generate a random secret key for AES with 256-bit key size
-    private static SecretKey generateSecretKey() {
+    public static SecretKey generateSecretKey() {
         try {
             KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
             SecureRandom secureRandom = new SecureRandom();

@@ -6,21 +6,18 @@ import BooleanCircuit.Shares;
 import Util.Tuple;
 
 import javax.crypto.SecretKey;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 
 import static Util.Converter.convertBooleanArrayToByteArray;
-import static Util.Util.getOutput;
-import static Util.Util.nextParty;
+import static Util.Util.*;
 
 // Verify the output of the prover is correct and reject otherwise
 public class Verifier {
     Tuple<View> views;
     SecretKey[] seeds;
-    int inputSize;
-    int outputSize;
     int[][] gates;
-
     Shares sharesObj;
     private boolean[][] shares;
     private int party;
@@ -31,24 +28,26 @@ public class Verifier {
 
     HashMap<Integer, Boolean> wiresParty = new HashMap<>();
     HashMap<Integer, Boolean> wiresNextParty = new HashMap<>();
+    private int numberOfInputs;
+    private int numberOfOutputs;
     private int numberOfAndGates;
+    private byte[] aArray;
 
-    public Verifier(int[][] gates) {
+    public Verifier(int[][] gates, int numberOfInputs, int numberOfOutputs, int numberOfAndGates) {
         this.gates = gates;
-
+        this.numberOfInputs = numberOfInputs;
+        this.numberOfOutputs = numberOfOutputs;
+        this.numberOfAndGates = numberOfAndGates;
     }
 
     public boolean receiveProof(Proof proof) {
         this.output = proof.output;
-        this.party = proof.party; // index of party
+        this.party = proof.party; // index of challenge party
         this.hashChallenge = proof.hashChallenge; // challenge e
-        this.inputSize = proof.inputSize; // n
-        this.outputSize = proof.outputSize; // m
-        this.numberOfAndGates = proof.numberOfAndGates; // number of AND gates
-        this.gates = proof.gates; // gates from boolean circuit
         this.commitsArrays = proof.commitsArrays; // c_e, c_e+1
         this.outputShares = proof.outputShares; // b_e
         this.views = proof.views; // w_e, w_e+1
+        this.aArray = proof.aArray;
 
         if(verify()) {
             System.out.println("Proof is correct");
@@ -83,13 +82,13 @@ public class Verifier {
         wiresParty = new HashMap<>();
         wiresNextParty = new HashMap<>();
 
-            for (int i = 0; i < inputSize; i++) {
-                wiresParty.put(i, viewParty.views[i]);
-                wiresNextParty.put(i, viewNextParty.views[i]);
+            for (int i = 0; i < numberOfInputs; i++) {
+                wiresParty.put(i, viewParty.andGateEvaluations[i]);
+                wiresNextParty.put(i, viewNextParty.andGateEvaluations[i]);
             }
 
         int andGateIdx = 0;
-        int viewIdx = inputSize;
+        int viewIdx = numberOfInputs;
         for (int gateIdx = 0; gateIdx < gates.length; gateIdx++) {
             int[] gate = gates[gateIdx];
             int inputWireIdx1 = gate[0];
@@ -114,15 +113,15 @@ public class Verifier {
                     boolean r1 = randomBitStreamParty[andGateIdx];
                     boolean r2 = randomBitStreamNextParty[andGateIdx];
                     outputParty = Gate.evalAND(inputParty1, inputParty2, inputNextParty1, inputNextParty2, r1, r2);
-                    outputNextParty = viewNextParty.views[viewIdx];
-                    System.out.println("Gate idxW1:" + inputWireIdx1 + " idxW2 " + inputWireIdx2 + " OP: "+ op + " idxO: " + outputWireIdx);
+                    outputNextParty = viewNextParty.andGateEvaluations[viewIdx];
+                    /*System.out.println("Gate idxW1:" + inputWireIdx1 + " idxW2 " + inputWireIdx2 + " OP: "+ op + " idxO: " + outputWireIdx);
                     System.out.println("Testing gate: " + gateIdx + " with and view index: " + viewIdx);
                     System.out.println("I1A: " + inputParty1 + " I1B: " + inputParty2 + " I2A: " + inputNextParty1 + " I2B: " + inputNextParty2 + " R1: " + r1 + " R2: " + r2);
-                    System.out.println("Output party: " + outputParty + " Output next party: " + outputNextParty);
-                    if(outputParty != viewParty.views[viewIdx]) {
+                    System.out.println("Output party: " + outputParty + " Output next party: " + outputNextParty);*/
+                    if(outputParty != viewParty.andGateEvaluations[viewIdx]) {
                         return false;
                     }
-                    System.out.println("Gate " + gateIdx + " is correct");
+                    // System.out.println("Gate " + gateIdx + " is correct");
                     andGateIdx++;
                     viewIdx++;
                     break;
@@ -148,6 +147,7 @@ public class Verifier {
         (4) Output accept
          */
 
+        // Check that the reconstruction of the output y is correct
         // (1) If Rec(y_1, y_2, y_3) != y, reject
         byte[] yRecovered = recover(outputShares);
         byte[] y = output;
@@ -156,6 +156,7 @@ public class Verifier {
             return false;
         }
 
+        // Check for inconsistency of view ?
         // (3) If w_received_e[j] != w_generated_e[j] for j in {1, ..., n}, reject
         if (!checkView()) {
             return false;
@@ -164,13 +165,64 @@ public class Verifier {
         // (2) If y_i != Output_i(w_i) for i in {e, e+1}, reject
         boolean[] yParty = outputShares[party];
         boolean[] yNextParty = outputShares[nextParty(party)];
-        boolean[] viewParty = getOutput(wiresParty, inputSize, outputSize, gates.length);
-        boolean[] viewNextParty = getOutput(wiresNextParty, inputSize, outputSize, gates.length);
+        boolean[] viewParty = getOutput(wiresParty, numberOfInputs, numberOfOutputs, gates.length);
+        boolean[] viewNextParty = getOutput(wiresNextParty, numberOfInputs, numberOfOutputs, gates.length);
 
         if(!Arrays.equals(yParty, viewParty) || !Arrays.equals(yNextParty, viewNextParty)) {
             return false;
         }
 
-        return true; // FIXME: implement
+        // (4) Check that the commitments are correct
+        if(!checkCommits()) {
+            return false;
+        }
+
+        if(!checkChallenge()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean checkChallenge() {
+        byte[] hashedAArray = hash(aArray);
+        if(!Arrays.equals(hashedAArray, hashChallenge)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean checkCommits() {
+        byte[] commitParty = commitsArrays[party];
+        byte[] commitNextParty = commitsArrays[nextParty(party)];
+        View viewParty = views.a;
+        View viewNextParty = views.b;
+
+        if(!checkCommit(commitParty, viewParty)) {
+            return false;
+        }
+
+        if(!checkCommit(commitNextParty, viewNextParty)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean checkCommit(byte[] commitParty, View view) {
+        byte[] kParty = view.seed.getEncoded();
+        byte[] vParty = convertBooleanArrayToByteArray(view.andGateEvaluations);
+        byte[] combined = new byte[kParty.length + vParty.length];
+        ByteBuffer commitBuffer = ByteBuffer.wrap(combined);
+        commitBuffer.put(kParty);
+        commitBuffer.put(vParty);
+        byte[] cj = commitBuffer.array();
+        byte[] generatedCommit = hash(cj);
+
+        if(!Arrays.equals(generatedCommit, commitParty)) {
+            return false;
+        }
+        return true;
     }
 }

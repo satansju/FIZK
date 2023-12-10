@@ -1,34 +1,27 @@
 package ZKBoo;
 
 import javax.crypto.SecretKey;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static Util.Converter.convertBooleanArrayToByteArray;
 
 class View {
 
-    boolean[] views;
+    boolean[] andGateEvaluations;
     SecretKey seed;
-    int size;
+    int numberOfAndGates;
     int outputSize;
     int currentGate = 0;
 
-    public View(int size, SecretKey seed, int outputSize) {
+    public View(int numberOfAndGates, SecretKey seed, int outputSize) {
         this.seed = seed;
-        //views = new boolean[size];
-        this.views = new boolean[size];
-        this.size = size;
+        this.andGateEvaluations = new boolean[numberOfAndGates];
+        this.numberOfAndGates = numberOfAndGates;
         this.outputSize = outputSize;
     }
 
     public void updateView(boolean val) {
-        views[currentGate] = val;
+        andGateEvaluations[currentGate] = val;
         currentGate++;
     }
 
-    // todo: test this
     public void addInputShare(boolean[] share) {
         for (boolean b : share) {
             updateView(b);
