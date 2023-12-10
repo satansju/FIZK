@@ -4,9 +4,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.security.SecureRandom;
-import java.security.Timestamp;
 
 import static ZKBoo.Protocol.runProtocol;
+import static ZKBoo.Protocol.runProtocolSeveralTimes;
 
 /**
  * @author @{USER} on @{DATE}
@@ -53,21 +53,8 @@ public class ProtocolTest {
     @Test
     public void measurePerformanceOfProtocol() throws Exception {
         String path = "src/BooleanCircuit/input/sha256.txt";
-        SecureRandom secureRandom = new SecureRandom();
-        long totalDuration = 0L;
-        long numberOfRounds = 1000L;
-        for (int i = 0; i<numberOfRounds; i++) {
-            System.out.println(i + "/" + numberOfRounds);
-            int input = secureRandom.nextInt();
-            long start = System.currentTimeMillis();
-            boolean result = runProtocol(path, input);
-            long end = System.currentTimeMillis();
-            long duration = end-start;
-            totalDuration += duration;
-            Assert.assertTrue(result);
-        }
-        System.out.println("Average time is: " + ((double) totalDuration/numberOfRounds));
-
+        double averageDurationOfRun = runProtocolSeveralTimes(path, 100L);
+        System.out.println("Average time is: " + averageDurationOfRun);
     }
 
     @Test
@@ -75,7 +62,6 @@ public class ProtocolTest {
         String path = "src/BooleanCircuit/input/sha256.txt";
         SecureRandom secureRandom = new SecureRandom();
         int input = secureRandom.nextInt();
-        long start = System.currentTimeMillis();
         boolean result = runProtocol(path, input);
         Assert.assertTrue(result);
     }
