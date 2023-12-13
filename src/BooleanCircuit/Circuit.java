@@ -46,12 +46,8 @@ public class Circuit {
         numberOfGates = Integer.parseInt(numbers[0]);
 
         gates = new int[numberOfGates][4];
-        /*System.out.println(gates.length);
-        System.out.println(gates[0].length);*/
-
         String line2 = myReader.nextLine();
         String[] numbers2 = line2.split(" ", 3);
-        /*System.out.println("Numbers: " + Arrays.toString(numbers2));*/
         numberOfInputs = Integer.parseInt(numbers2[0]);
         numberOfOutputs = Integer.parseInt(numbers2[2]);
         numberOfAndGates = 0;
@@ -77,7 +73,6 @@ public class Circuit {
             }
             i += 1;
         }
-        /*System.out.println("Number of And Gates is: " + numberOfAndGates);*/
     }
 
     public int[][] getGates() {
@@ -98,14 +93,10 @@ public class Circuit {
 
     public void parse(String path, Integer input) {
         this.path = path;
-
-        //FileReader fileReader = new FileReader(input);
         File file = new File(path);
         Scanner myReader;
-        // FileReader fileReader;
         try {
             myReader = new Scanner(file);
-            // fileReader = new FileReader(input);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return;
@@ -120,12 +111,7 @@ public class Circuit {
         String[] numbers2 = line2.split(" ", 3);
         numberOfInputs = Integer.parseInt(numbers2[0]);
         numberOfOutputs = Integer.parseInt(numbers2[2]);
-
-
-        /*System.out.println(numberOfGates + " " + numberOfWires + " " + numberOfInputs + " " + numberOfOutputs);*/
-
         initializeValues(input);
-// TODO: read in the circuit first and then evaluate
         while (myReader.hasNext()) {
             String line = myReader.nextLine();
             String[] splitLine = line.split(" ", 6);
@@ -141,7 +127,6 @@ public class Circuit {
             }
 
             boolean result = evalGate(op, inputWires);
-            /*System.out.println(result);*/
             wires.put(outputWire, result);
         }
 
@@ -160,19 +145,8 @@ public class Circuit {
             int idx = firstIndex + i;
             arr[i] = wires.get(idx);
         }
-
-        /*byte[] outputByteArray = new byte[numberOfOutputs / 8];
-        // convert boolean array to BigInteger
-        byte bytes = Byte.parseByte(String.valueOf(arr));*/
-
         byte[] bytes = convertBooleanArrayToByteArray(arr);
-
         output = new BigInteger(bytes);
-        // System.out.println(output);
-    }
-
-    public BigInteger getOutput() {
-        return output;
     }
 
     private void initializeValues(Integer input) {
@@ -188,18 +162,27 @@ public class Circuit {
         // printHashMap(wires);
     }
 
+    /**
+     * For debugging purposes
+     * @param hashMap
+     * @param <T>
+     * @param <K>
+     */
     private <T, K> void printHashMap(HashMap<T, K> hashMap) {
         for (T k : hashMap.keySet()) {
             String key = k.toString();
             String value = hashMap.get(k).toString();
-            // System.out.println(key + ": " + value);
         }
     }
 
 
-    // TODO: something similar to evalGate that works for three parties
-    // take all inputs from all three views and do the calculations here
-    private boolean evalGate(String op, Integer[] inputs) {  // TODO: skal det kun være party 1 der f.eks. laver XOR? jeg tror det ikke, men det er værd at overveje
+    /**
+     * Evaluate a gate
+     * @param op
+     * @param inputs
+     * @return
+     */
+    private boolean evalGate(String op, Integer[] inputs) {
         switch (op) {
             case "XOR":
                 return wires.get(inputs[0]) ^ wires.get(inputs[1]);
@@ -208,47 +191,7 @@ public class Circuit {
             case "INV":
                 return !wires.get(inputs[0]);
             default:
-                // System.out.println("Wrong input: " + op);
                 throw new Error("Gate " + op + " does not exist");
-        }
-    }
-
-    public static void main(String[] args) {
-        MessageDigest digest = null;
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-
-
-        byte[] byte0 = BigInteger.ZERO.toByteArray();
-        // System.out.println(Arrays.toString(byte0));
-
-        for (byte b : byte0) {
-            Assert.assertEquals(0, b);
-        }
-
-        //Assert.assertTrue(byte0 == );
-        BigInteger hashToBe = new BigInteger(digest.digest(byte0));
-
-        Path currentRelativePath = Paths.get("");
-        String s = currentRelativePath.toAbsolutePath().toString();
-        // System.out.println("Current absolute path is: " + s);
-        String input = s + File.separator + "src" + File.separator + "BooleanCircuit" + File.separator + "input" + File.separator + "sha256.txt";
-        // System.out.println("Input: " + input);
-
-        Circuit parser = new Circuit(input);
-
-        parser.parseCircuit();
-        // parser.parse(input, 0);
-
-        // System.out.println("hashToBe");
-        // System.out.println(hashToBe);
-        // System.out.println("0 byte");
-        // System.out.println(byte0.toString());
-
-
-        // Assert.assertEquals(parser.getOutput(), hashToBe);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
         }
     }
 }

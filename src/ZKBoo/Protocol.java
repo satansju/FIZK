@@ -9,7 +9,6 @@ import java.security.SecureRandom;
  * @project @{PROJECT}
  */
 public class Protocol {
-    // TODO / FIXME: run multiple times to get better soundness error
     public static boolean runProtocol(String path, int input) {
         Circuit circuit = new Circuit(path);
         circuit.parseCircuit();
@@ -18,7 +17,6 @@ public class Protocol {
 
     public static boolean runZKBooProtocol(Circuit circuit, int input) {
         int[][] gates = circuit.getGates();
-        // System.out.println("No of AND gates: " + circuit.getNumberOfAndGates());
         int numberOfInputs = circuit.getNumberOfInputs();
         int numberOfOutputs = circuit.getNumberOfOutputs();
         int numberOfAndGates = circuit.getNumberOfAndGates();

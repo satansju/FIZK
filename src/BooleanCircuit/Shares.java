@@ -1,13 +1,11 @@
 package BooleanCircuit;
+
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Collections;
 
-import static Util.Converter.convertBooleanArrayToByteArray;
 import static Util.Converter.convertByteArrayToBooleanArray;
 import static Util.Converter.intToBooleanArray;
 
@@ -93,8 +91,6 @@ public class Shares {
     public static boolean[][] getShares(int x, int numberOfInputs) {
         try {
             // Generate a random secret key for AES with 256-bit key size
-
-
             // Generate random tapes k1, k2, k3
             boolean[] k1 = generateRandomBytes(secretKeys[0]);
             boolean[] k2 = generateRandomBytes(secretKeys[1]);
@@ -129,11 +125,7 @@ public class Shares {
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] encryptedBytes = cipher.doFinal(bytes);
-        // System.out.println("length of block of encryptedBytes: " + encryptedBytes.length);
-
         boolean[] convertedBytes = convertByteArrayToBooleanArray(encryptedBytes);
-        // System.out.println("length of AES block: " + convertedBytes.length);
-
         return convertedBytes;
     }
 
@@ -141,7 +133,6 @@ public class Shares {
     private static boolean[][] calculateShares(int x, int numberOfInputs, boolean[] k1, boolean[] k2) throws Exception {
         boolean[][] shares = new boolean[3][numberOfInputs];
         boolean[] inputBits = intToBooleanArray(x, numberOfInputs);
-        // System.out.println(Arrays.toString(inputBits));
 
         for (int i = 0; i < numberOfInputs; i++) {
             shares[0][i] = k1[i];

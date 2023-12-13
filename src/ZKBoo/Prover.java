@@ -8,12 +8,12 @@ import Util.Tuple;
 import javax.crypto.SecretKey;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import static Util.Util.*;
 
-import static Util.Converter.*;
+import static Util.Converter.convertBooleanArrayToByteArray;
+import static Util.Converter.convertByteArrayToInteger;
+import static Util.Util.*;
 
 public class Prover {
     View[] views;
@@ -43,7 +43,6 @@ public class Prover {
 
     public boolean[][] getOutputShares() {
         boolean[][] outputShares = new boolean[3][numberOfOutputs];
-        // System.out.println(numberOfOutputs);
         for (int i = 0; i < 3; i++) {
             outputShares[i] = getOutput(wires.get(i), numberOfInputs, numberOfOutputs, gates.length);
         }
@@ -86,9 +85,7 @@ public class Prover {
 
                 // put the output value on the output wire of the gate
                 partyWires.put(outputWire, output); // TODO: test that this is actually placed in the correct position
-                /*if(gateIdx == 116629 - numberOfInputs) {
-                    System.out.println(partyWires.get(116629));
-                }*/
+
                 // put the output in the view if the gate was an AND gate
                 if (GateType.values()[op] == GateType.AND) {
                     views[party].updateView(output);
@@ -104,7 +101,6 @@ public class Prover {
     public void doMPCInTheHead() {
         /*
         We want to implement the ZKBoo like this:
-
             (1) Sample random tapes k_1, k_2, k_3
             (2) Compute (x_1, x_2, x_3) <- Share(x; k_1, k_2, k_3)
             (3) Let w_1, w_2, w_3 be vectors of length N+1
@@ -172,7 +168,6 @@ public class Prover {
             for (int j = 0; j < share.length; j++) {
                 wires.get(i).put(j, share[j]);
             }
-            // System.out.println(wires.get(i));
         }
     }
 
