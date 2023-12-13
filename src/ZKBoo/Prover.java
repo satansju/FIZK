@@ -50,6 +50,10 @@ public class Prover {
         return outputShares;
     }
 
+    public byte[] getOutputAsByteArray() {
+        return convertBooleanArrayToByteArray(output);
+    }
+
     public void evaluateCircuit() {
         int andGateIdx = 0;
         for (int gateIdx = 0; gateIdx < gates.length; gateIdx++) {

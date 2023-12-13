@@ -1,4 +1,4 @@
-package Test.FIZK;
+package Test.ZKBoo;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -53,7 +53,7 @@ public class ProtocolTest {
     @Test
     public void measurePerformanceOfProtocol() throws Exception {
         String path = "src/BooleanCircuit/input/sha256.txt";
-        double averageDurationOfRun = runProtocolSeveralTimes(path, 100L);
+        double averageDurationOfRun = runProtocolSeveralTimes(path, 10L);
         System.out.println("Average time is: " + averageDurationOfRun);
     }
 
