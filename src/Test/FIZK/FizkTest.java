@@ -45,7 +45,7 @@ public class FizkTest {
         Assert.assertFalse(Arrays.equals(signature.getProof().aArray, signature2.getProof().aArray));
 
         boolean verification = protocol.verify(publicKeyPair2, message, signature2);
-        Assert.assertFalse(verification);
+        Assert.assertTrue(verification);
     }
 
     @Test
