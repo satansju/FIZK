@@ -215,24 +215,6 @@ public class Prover {
         Tuple<View> zViewsForProof = getZ(challengeParty, views);
         byte[] y = convertBooleanArrayToByteArray(output);
 
-        int countBytes = 0;
-        countBytes += y.length;
-        countBytes += 4;
-        countBytes += challenge.length;
-        countBytes += bCommitsArray[0].length;
-        countBytes += bCommitsArray[1].length;
-        countBytes += bCommitsArray[2].length;
-        countBytes += outputShares[0].length;
-        countBytes += outputShares[1].length;
-        countBytes += outputShares[2].length;
-        countBytes += zViewsForProof.a.andGateEvaluations.length;
-        countBytes += zViewsForProof.b.andGateEvaluations.length;
-        countBytes += aArray.length;
-        countBytes += 2*3*4;
-        countBytes += 2 * 32;
-        // System.out.println("proof size is: "+ countBytes);
-
-
         return new Proof(
             y,
             challengeParty,
