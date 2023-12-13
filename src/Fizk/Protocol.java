@@ -109,10 +109,19 @@ public class Protocol {
         byte[] combined = new byte[aArray.length + message.length];
         System.arraycopy(aArray, 0, combined, 0, aArray.length);
         System.arraycopy(message, 0, combined, aArray.length, message.length);
+
         byte[] computedHashChallenge = hash(combined);
         byte[] hashChallenge = signature.getChallenge();
         boolean checkHashChallenge = Arrays.equals(computedHashChallenge, hashChallenge);
         if (!checkHashChallenge) {
+            return false;
+        }
+
+        // Check outputs are equal
+        byte[] output = signature.getProof().output;
+        byte[] y = keyPair.getY();
+        boolean checkOutputs = Arrays.equals(output, y);
+        if (!checkOutputs) {
             return false;
         }
 

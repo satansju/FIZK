@@ -7,7 +7,7 @@ import Fizk.Signature;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.security.spec.ECField;
+import java.util.Arrays;
 
 /**
  * @author @{USER} on @{DATE}
@@ -28,6 +28,27 @@ public class FizkTest {
     }
 
     @Test
+    public void shouldAcceptWithDifferentProtocolInstances() throws Exception {
+        byte[] message = "Hello World".getBytes();
+        Protocol protocol = new Protocol();
+        protocol.generateSecretkeyPair();
+        SecretkeyPair secretkeyPair = protocol.getSecretkeyPair();
+        Signature signature = protocol.sign(secretkeyPair, message);
+
+        Protocol protocol2 = new Protocol();
+        protocol2.generateSecretkeyPair();
+        SecretkeyPair secretkeyPair2 = protocol2.getSecretkeyPair();
+        PublicKeyPair publicKeyPair2 = protocol2.getPublicKeyPair();
+        Signature signature2 = protocol2.sign(secretkeyPair2, message);
+
+        Assert.assertFalse(Arrays.equals(signature.getChallenge(), signature2.getChallenge()));
+        Assert.assertFalse(Arrays.equals(signature.getProof().aArray, signature2.getProof().aArray));
+
+        boolean verification = protocol.verify(publicKeyPair2, message, signature2);
+        Assert.assertFalse(verification);
+    }
+
+    @Test
     public void signatureSchemeShouldReject() throws Exception {
         Protocol protocol = new Protocol();
         protocol.generateSecretkeyPair();
@@ -37,6 +58,43 @@ public class FizkTest {
         Signature signature = protocol.sign(secretkeyPair, message);
         byte[] wrongMessage = "World! Hello".getBytes();
         boolean verification = protocol.verify(publicKeyPair, wrongMessage, signature);
+        Assert.assertFalse(verification);
+    }
+
+    @Test
+    public void differentMessagesShouldReject() throws Exception {
+        byte[] message = "Hello World".getBytes();
+        byte[] wrongMessage = "World! Hello".getBytes();
+        Protocol protocol = new Protocol();
+        protocol.generateSecretkeyPair();
+        SecretkeyPair secretkeyPair = protocol.getSecretkeyPair();
+        PublicKeyPair publicKeyPair = protocol.getPublicKeyPair();
+
+
+        Signature wrongSignature = protocol.sign(secretkeyPair, wrongMessage);
+
+        boolean verification = protocol.verify(publicKeyPair, message, wrongSignature);
+        Assert.assertFalse(verification);
+    }
+
+    @Test
+    public void shouldRejectWithDifferentSignatures() throws Exception {
+        byte[] message = "Hello World".getBytes();
+        Protocol protocol = new Protocol();
+        protocol.generateSecretkeyPair();
+        SecretkeyPair secretkeyPair = protocol.getSecretkeyPair();
+        PublicKeyPair publicKeyPair = protocol.getPublicKeyPair();
+        Signature signature = protocol.sign(secretkeyPair, message);
+
+        Protocol protocol2 = new Protocol();
+        protocol2.generateSecretkeyPair();
+        SecretkeyPair secretkeyPair2 = protocol2.getSecretkeyPair();
+        Signature signature2 = protocol2.sign(secretkeyPair2, message);
+
+        Assert.assertFalse(Arrays.equals(signature.getChallenge(), signature2.getChallenge()));
+        Assert.assertFalse(Arrays.equals(signature.getProof().aArray, signature2.getProof().aArray));
+
+        boolean verification = protocol.verify(publicKeyPair, message, signature2);
         Assert.assertFalse(verification);
     }
 }

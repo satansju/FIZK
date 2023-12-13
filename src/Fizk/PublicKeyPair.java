@@ -13,4 +13,8 @@ public class PublicKeyPair {
         this.y = y;
         this.secretKey = secretKey;
     }
+
+    public byte[] getY() {
+        return y;
+    }
 }
